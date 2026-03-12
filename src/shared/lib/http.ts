@@ -53,6 +53,14 @@ async function parseResponseBody(response: Response): Promise<unknown> {
 
 function getErrorMessage(payload: unknown, fallbackStatus: number): string {
   if (typeof payload === "string" && payload.trim()) {
+    if (payload.trim() === "Identity or password is invalid.") {
+      return "Identitas atau password tidak valid.";
+    }
+
+    if (payload.trim() === "Identity and password are required.") {
+      return "Identitas dan password wajib diisi.";
+    }
+
     return payload;
   }
 
@@ -60,6 +68,14 @@ function getErrorMessage(payload: unknown, fallbackStatus: number): string {
     const details = payload as ApiProblemDetails;
 
     if (typeof details.detail === "string" && details.detail.trim()) {
+      if (details.detail === "Identity or password is invalid.") {
+        return "Identitas atau password tidak valid.";
+      }
+
+      if (details.detail === "Identity and password are required.") {
+        return "Identitas dan password wajib diisi.";
+      }
+
       return details.detail;
     }
 
@@ -84,12 +100,26 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(buildUrl(path), {
-    method: options.method ?? "GET",
-    headers,
-    body: options.body ?? null,
-    signal: options.signal,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      method: options.method ?? "GET",
+      headers,
+      body: options.body ?? null,
+      signal: options.signal,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new ApiError(
+        "Backend tidak dapat dijangkau. Pastikan API berjalan di URL yang benar.",
+        0,
+        null
+      );
+    }
+
+    throw error;
+  }
 
   const payload = await parseResponseBody(response);
 

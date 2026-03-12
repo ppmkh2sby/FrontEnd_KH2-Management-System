@@ -12,11 +12,15 @@
   --color-mist-50: #f6faf7;
   --color-mist-100: #f0f6f2;
   --color-mist-200: #dbe6df;
-  --animate-auth-fade-up: auth-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-auth-fade-up: auth-fade-up 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-auth-orb-float: auth-orb-float 18s ease-in-out infinite alternate;
   --animate-auth-grid-shift: auth-grid-shift 24s linear infinite;
   --animate-auth-marquee-left: auth-marquee-left 32s linear infinite;
   --animate-auth-marquee-right: auth-marquee-right 36s linear infinite;
+  --animate-auth-shimmer: auth-shimmer 2.4s linear infinite;
+  --animate-auth-pulse-ring: auth-pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-auth-logo-pop: auth-logo-pop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-auth-spin: auth-spin 0.7s linear infinite;
 }
 
 @layer base {
@@ -91,6 +95,46 @@
 
   to {
     transform: translate3d(8%, 0, 0);
+  }
+}
+
+@keyframes auth-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes auth-pulse-ring {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.2;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes auth-logo-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
