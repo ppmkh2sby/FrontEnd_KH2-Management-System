@@ -19,11 +19,18 @@ export function HomePage() {
         </p>
 
         <div className="page__actions">
-          <button className="button button--primary" type="button">
+          <button
+            className="inline-flex min-h-[3.3rem] items-center justify-center rounded-full border border-transparent bg-[linear-gradient(135deg,#174c34_0%,#2d7a56_100%)] px-5 py-3 font-bold text-white shadow-[0_18px_34px_rgba(16,53,37,0.24)] transition hover:-translate-y-px hover:shadow-[0_22px_40px_rgba(16,53,37,0.3)]"
+            type="button"
+          >
             Modul Santri
           </button>
 
-          <button className="button button--ghost" type="button" onClick={() => void logout()}>
+          <button
+            className="inline-flex min-h-[3.3rem] items-center justify-center rounded-full border border-white/12 bg-white/5 px-5 py-3 font-bold text-inherit transition hover:bg-white/8"
+            type="button"
+            onClick={() => void logout()}
+          >
             Logout
           </button>
         </div>

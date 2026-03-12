@@ -7,7 +7,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isBootstrapping } = useAuth();
 
   if (isBootstrapping) {
-    return <div className="auth-loading">Memuat sesi...</div>;
+    return (
+      <div className="grid min-h-screen place-items-center bg-forest-900 text-mist-100/80">
+        Memuat sesi...
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -25,11 +29,15 @@ function PlaceholderPage({
   description: string;
 }) {
   return (
-    <main className="auth-page">
-      <section className="auth-card">
-        <p className="auth-card__eyebrow">Flow lanjutan</p>
-        <h1 className="auth-card__title">{title}</h1>
-        <p className="auth-card__description">{description}</p>
+    <main className="grid min-h-screen place-items-center bg-[linear-gradient(135deg,#081e14_0%,#123626_46%,#dbe6df_100%)] p-4">
+      <section className="w-full max-w-xl rounded-[1.75rem] border border-white/12 bg-white/95 p-8 text-forest-900 shadow-[0_24px_60px_rgba(13,36,24,0.2)]">
+        <p className="m-0 text-[0.72rem] font-bold uppercase tracking-[0.18em] text-forest-700">
+          Flow lanjutan
+        </p>
+        <h1 className="mt-3 font-display text-4xl leading-none tracking-[-0.04em]">
+          {title}
+        </h1>
+        <p className="mt-4 text-sm leading-7 text-forest-900/72">{description}</p>
       </section>
     </main>
   );
