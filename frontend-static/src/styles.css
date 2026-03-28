@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  --color-forest-950: #081e14;
+  --color-forest-900: #0b2117;
+  --color-forest-800: #123626;
+  --color-forest-700: #174c34;
+  --color-forest-600: #2d7a56;
+  --color-forest-500: #48906b;
+  --color-mist-50: #f6faf7;
+  --color-mist-100: #f0f6f2;
+  --color-mist-200: #dbe6df;
+  --animate-auth-fade-up: auth-fade-up 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-auth-orb-float: auth-orb-float 18s ease-in-out infinite alternate;
+  --animate-auth-grid-shift: auth-grid-shift 24s linear infinite;
+  --animate-auth-marquee-left: auth-marquee-left 32s linear infinite;
+  --animate-auth-marquee-right: auth-marquee-right 36s linear infinite;
+  --animate-auth-shimmer: auth-shimmer 2.4s linear infinite;
+  --animate-auth-pulse-ring: auth-pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-auth-logo-pop: auth-logo-pop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-auth-spin: auth-spin 0.7s linear infinite;
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    @apply m-0 min-w-80 min-h-screen bg-forest-900 font-sans text-mist-50;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@keyframes auth-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-orb-float {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  to {
+    transform: translate3d(1.4rem, 1rem, 0) scale(1.06);
+  }
+}
+
+@keyframes auth-grid-shift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-1.8rem, 1.8rem, 0);
+  }
+}
+
+@keyframes auth-marquee-left {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-22%, 0, 0);
+  }
+}
+
+@keyframes auth-marquee-right {
+  from {
+    transform: translate3d(-10%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(8%, 0, 0);
+  }
+}
+
+@keyframes auth-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes auth-pulse-ring {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.2;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes auth-logo-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.72) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
