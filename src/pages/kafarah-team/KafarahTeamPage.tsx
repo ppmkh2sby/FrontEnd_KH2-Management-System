@@ -23,6 +23,14 @@ type KafarahFilters = {
   statusSetor: "all" | "belum-selesai" | "selesai";
 };
 
+type KafarahEditForm = {
+  tanggal: string;
+  jenisPelanggaran: string;
+  kafarah: string;
+  jumlahSetor: number;
+  tenggat: string;
+};
+
 const pageSize = 10;
 const defaultPelanggaran = "tidak_sholat_subuh_di_masjid";
 
@@ -52,7 +60,7 @@ function KafarahTeamContent() {
     gender: "all",
     statusSetor: "all",
   });
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<KafarahEditForm>({
     tanggal: "",
     jenisPelanggaran: defaultPelanggaran,
     kafarah: kafarahMapping[defaultPelanggaran].kafarah,
