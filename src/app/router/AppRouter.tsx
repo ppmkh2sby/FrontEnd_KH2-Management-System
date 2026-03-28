@@ -3,6 +3,8 @@ import { AttendancePage } from "@/pages/attendance/AttendancePage";
 import { AttendanceCreatePage } from "@/pages/attendance-create/AttendanceCreatePage";
 import { AttendanceRecapPage } from "@/pages/attendance-recap/AttendanceRecapPage";
 import { AttendanceTeamPage } from "@/pages/attendance-team/AttendanceTeamPage";
+import { FrontendStaticDemoLandingPage } from "@/frontend-static-demo/FrontendStaticDemoLandingPage";
+import { FrontendStaticDemoLoginPage } from "@/frontend-static-demo/FrontendStaticDemoLoginPage";
 import { HomePage } from "@/pages/home/HomePage";
 import { KafarahCreatePage } from "@/pages/kafarah-create/KafarahCreatePage";
 import { KafarahMinePage } from "@/pages/kafarah-mine/KafarahMinePage";
@@ -65,6 +67,8 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/frontend-static-demo" element={<FrontendStaticDemoLandingPage />} />
+      <Route path="/frontend-static-demo/login" element={<FrontendStaticDemoLoginPage />} />
 
       <Route
         path="/change-password"
