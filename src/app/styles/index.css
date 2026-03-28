@@ -46,6 +46,32 @@
   }
 }
 
+@layer components {
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #10b981 #e9fbf4;
+    scrollbar-gutter: stable;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: #e9fbf4;
+    border-radius: 999px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 999px;
+  }
+
+  .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+  }
+}
+
 @keyframes auth-fade-up {
   from {
     opacity: 0;

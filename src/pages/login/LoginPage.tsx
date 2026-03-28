@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { LoginForm } from "@/widgets/auth/login-form/LoginForm";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ApiError } from "@/shared/lib/http";
@@ -59,7 +59,7 @@ export function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isBootstrapping && isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   async function handleLogin(values: { identity: string; password: string }) {
@@ -155,11 +155,11 @@ export function LoginPage() {
               id="auth-hero-title"
               className="m-0 font-display text-[clamp(2.2rem,4.2vw,3.6rem)] leading-[0.9] tracking-[-0.05em] text-mist-50 drop-shadow-[0_8px_24px_rgba(3,10,7,0.18)] max-lg:text-[clamp(1.9rem,5.5vw,2.8rem)]"
             >
-              Login sistem pondok yang rapi.
+              Sistem Manajemen PPM Khoirul Huda 2
             </h1>
 
             <p className="mt-4 max-w-md text-[0.91rem] leading-[1.62] text-mist-100/70 max-lg:text-[0.88rem]">
-              Autentikasi terpusat untuk seluruh civitas pondok. Masuk menggunakan identitas yang telah terdaftar di sistem.
+              Sistem manajemen terintregasi untuk mendukung operasional dan pengelolaan data di PPM Khoirul Huda 2.
             </p>
           </div>
 
@@ -207,12 +207,16 @@ export function LoginPage() {
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-forest-600" />
                   Secure Access
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-forest-700/10 bg-forest-700/5 px-2.5 py-1 text-[0.65rem] font-semibold text-forest-700/60">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-forest-700/10 bg-forest-700/5 px-2.5 py-1 text-[0.65rem] font-semibold text-forest-700/60 transition-all duration-150 hover:border-forest-600/25 hover:bg-forest-600/10 hover:text-forest-700"
+                  aria-label="Kembali ke halaman utama"
+                >
                   <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                    <path d="M8 1a5 5 0 0 1 5 5v1h.5A1.5 1.5 0 0 1 15 8.5v5A1.5 1.5 0 0 1 13.5 15h-11A1.5 1.5 0 0 1 1 13.5v-5A1.5 1.5 0 0 1 2.5 7H3V6a5 5 0 0 1 5-5Zm0 1.5a3.5 3.5 0 0 0-3.5 3.5v1h7V6A3.5 3.5 0 0 0 8 2.5Z" />
+                    <path fillRule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.25a.75.75 0 0 1 0-1.06l4.5-4.25a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clipRule="evenodd" />
                   </svg>
-                  KH2 System
-                </span>
+                  Beranda
+                </Link>
               </div>
 
               <h2

@@ -33,7 +33,34 @@ function buildUrl(path: string): string {
 }
 
 function isJsonResponse(contentType: string | null): boolean {
-  return contentType?.toLowerCase().includes("application/json") ?? false;
+  const normalized = contentType?.toLowerCase() ?? "";
+  return normalized.includes("application/json") || normalized.includes("+json");
+}
+
+function tryParseJsonText(text: string): unknown {
+  const normalized = text.trim();
+
+  if (!normalized.startsWith("{") && !normalized.startsWith("[")) {
+    return text;
+  }
+
+  try {
+    return JSON.parse(normalized);
+  } catch {
+    return text;
+  }
+}
+
+function normalizeProblemDetailMessage(message: string): string {
+  if (message === "Identity or password is invalid.") {
+    return "Identitas atau password tidak valid.";
+  }
+
+  if (message === "Identity and password are required.") {
+    return "Identitas dan password wajib diisi.";
+  }
+
+  return message;
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
@@ -48,35 +75,23 @@ async function parseResponseBody(response: Response): Promise<unknown> {
   }
 
   const text = await response.text();
-  return text || undefined;
+  if (!text) {
+    return undefined;
+  }
+
+  return tryParseJsonText(text);
 }
 
 function getErrorMessage(payload: unknown, fallbackStatus: number): string {
   if (typeof payload === "string" && payload.trim()) {
-    if (payload.trim() === "Identity or password is invalid.") {
-      return "Identitas atau password tidak valid.";
-    }
-
-    if (payload.trim() === "Identity and password are required.") {
-      return "Identitas dan password wajib diisi.";
-    }
-
-    return payload;
+    return normalizeProblemDetailMessage(payload.trim());
   }
 
   if (payload && typeof payload === "object") {
     const details = payload as ApiProblemDetails;
 
     if (typeof details.detail === "string" && details.detail.trim()) {
-      if (details.detail === "Identity or password is invalid.") {
-        return "Identitas atau password tidak valid.";
-      }
-
-      if (details.detail === "Identity and password are required.") {
-        return "Identitas dan password wajib diisi.";
-      }
-
-      return details.detail;
+      return normalizeProblemDetailMessage(details.detail.trim());
     }
 
     if (typeof details.title === "string" && details.title.trim()) {

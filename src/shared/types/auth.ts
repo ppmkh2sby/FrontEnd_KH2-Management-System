@@ -1,3 +1,10 @@
+export type AppRole =
+  | "Admin"
+  | "DewanGuru"
+  | "Pengurus"
+  | "Santri"
+  | "WaliSantri";
+
 export type LoginRequest = {
   identity: string;
   password: string;
@@ -10,7 +17,7 @@ export type LoginResponse = {
   username: string;
   fullName: string;
   email: string | null;
-  role: string;
+  role: AppRole | string;
   emailConfirmed: boolean;
   mustChangePassword: boolean;
   isActive: boolean;
@@ -21,7 +28,7 @@ export type AuthMeResponse = {
   username: string;
   fullName: string;
   email: string | null;
-  role: string;
+  role: AppRole | string;
   emailConfirmed: boolean;
   mustChangePassword: boolean;
   isActive: boolean;

@@ -1,12 +1,22 @@
+import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { getDashboardNavigation } from "@/shared/config/navigation";
 import { getSidebarCaption, useSantriDashboard } from "@/shared/lib/santri-dashboard";
+import type { SantriDashboardResponse } from "@/shared/types/dashboard";
 import { AppShell } from "@/widgets/app-shell/AppShell";
-import { DashboardOverview } from "@/widgets/dashboard-overview/DashboardOverview";
 
-export function HomePage() {
+type SantriPageShellProps = {
+  children: (context: {
+    santriDashboard: SantriDashboardResponse | null;
+    santriDashboardError: string | null;
+    isSantriDashboardLoading: boolean;
+  }) => ReactNode;
+  contentPanelClassName?: string;
+};
+
+export function SantriPageShell({ children, contentPanelClassName }: SantriPageShellProps) {
   const { user, token, logout } = useAuth();
   const {
     santriDashboard,
@@ -18,12 +28,9 @@ export function HomePage() {
     return <Navigate to="/login" replace />;
   }
 
-  const contentPanelClassName =
-    user.role === "DewanGuru" || user.role === "Pengurus"
-      ? "h-[calc(100vh-40px)] overflow-hidden"
-      : user.role === "WaliSantri"
-        ? "h-[calc(100vh-40px)] overflow-y-auto"
-        : undefined;
+  if (user.role !== "Santri") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <AppShell
@@ -33,12 +40,11 @@ export function HomePage() {
       sidebarCaption={getSidebarCaption(user, santriDashboard)}
       contentPanelClassName={contentPanelClassName}
     >
-      <DashboardOverview
-        user={user}
-        santriDashboard={santriDashboard}
-        santriDashboardError={santriDashboardError}
-        isSantriDashboardLoading={isSantriDashboardLoading}
-      />
+      {children({
+        santriDashboard,
+        santriDashboardError,
+        isSantriDashboardLoading,
+      })}
     </AppShell>
   );
 }

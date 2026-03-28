@@ -18,5 +18,5 @@ export function getPostLoginRoute(source: AuthStateSource): string {
     return "/verify-email";
   }
 
-  return "/";
+  return "/dashboard";
 }
