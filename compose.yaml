@@ -1,12 +1,60 @@
 services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env.azure}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env.azure}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.azure}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      # Clone Backend_KH2-Management-System next to this frontend repository.
+      context: ../Backend_KH2-Management-System
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=database;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__Issuer: ${APP_ORIGIN:?Set APP_ORIGIN in .env.azure}
+      Jwt__Audience: ${APP_ORIGIN:?Set APP_ORIGIN in .env.azure}
+      Jwt__SecretKey: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env.azure}
+      Database__MigrateOnStartup: "true"
+      Database__SeedOnStartup: "false"
+      Database__SeedSampleDataOnStartup: "false"
+      Https__Enabled: ${HTTPS_ENABLED:-false}
+      AllowedHosts: ${APP_HOST:?Set APP_HOST in .env.azure}
+      # Trust the frontend Nginx container to pass the original HTTPS scheme.
+      ReverseProxy__KnownNetworks__0: 172.16.0.0/12
+    expose:
+      - "8080"
+    restart: unless-stopped
+    volumes:
+      - face_capture_data:/var/lib/kh2/private-face-captures
+
   frontend:
     build:
       context: .
       args:
         # Keep API calls same-origin; Nginx proxies /api to the backend.
         VITE_API_BASE_URL: ""
-    env_file:
-      - .env.azure
+    depends_on:
+      - backend
+    environment:
+      BACKEND_UPSTREAM: http://backend:8080
     ports:
       - "80:80"
     restart: unless-stopped
+
+volumes:
+  face_capture_data:
+  postgres_data:

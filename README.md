@@ -77,14 +77,17 @@ server {
 
 ## Deploy ke Azure VM
 
-Konfigurasi Docker Compose siap pakai tersedia di root project. Salin template
-environment, isi alamat backend yang dapat dijangkau dari VM/container, lalu
-jalankan container:
+Konfigurasi Docker Compose di root project menjalankan frontend, backend, dan
+PostgreSQL dalam satu VM. Clone repository backend sebagai folder sibling,
+salin template environment, isi nilai production, lalu jalankan container:
 
 ```bash
+cd ~
+git clone https://github.com/ppmkh2sby/Backend_KH2-Management-System.git
+cd ~/FrontEnd_KH2-Management-System
 cp .env.azure.example .env.azure
-# edit BACKEND_UPSTREAM di .env.azure
-docker compose up --build -d
+# edit password database, JWT, dan public URL di .env.azure
+docker compose --env-file .env.azure up --build -d
 ```
 
 Panduan lengkap, termasuk pengaturan NSG Azure, verifikasi proxy API, dan HTTPS,

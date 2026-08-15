@@ -1,17 +1,17 @@
-# Deploy frontend ke Azure VM
+# Deploy stack KH2 ke satu Azure VM
 
-Frontend ini dibuild sebagai static site. Container Nginx melayani aplikasi dan
-meneruskan semua request `/api/` ke backend, sehingga browser cukup mengakses
-satu domain dan tidak membutuhkan konfigurasi CORS.
+Satu Docker Compose menjalankan tiga container pada jaringan internal: frontend
+Nginx, backend ASP.NET Core, dan PostgreSQL. Hanya frontend yang membuka port
+`80` ke VM. Browser mengakses frontend dan Nginx meneruskan `/api/` ke backend,
+sehingga tidak membutuhkan CORS.
 
-## 1. Persiapan VM Ubuntu
+## 1. Siapkan VM Ubuntu
 
-Di Azure Network Security Group (NSG), izinkan inbound TCP `80` dari Internet.
-Untuk HTTPS, tambahkan juga TCP `443`. Jangan membuka port backend ke Internet
-jika frontend dapat menjangkaunya lewat private network.
+Di Azure Network Security Group (NSG), izinkan inbound TCP `80`. Tambahkan TCP
+`443` saat HTTPS sudah dikonfigurasi. Jangan membuat NSG rule publik untuk
+port `5432` (PostgreSQL) atau `8080` (backend).
 
-Masuk ke VM Ubuntu dan instal Docker Engine beserta plugin Compose. Perintah
-berikut menggunakan repository resmi Docker:
+Instal Docker Engine dan plugin Compose dari repository resmi Docker:
 
 ```bash
 sudo apt update
@@ -32,87 +32,80 @@ sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin d
 sudo docker run hello-world
 ```
 
-Gunakan `sudo docker compose ...` pada seluruh perintah berikut jika user SSH
-Anda belum diberi akses ke Docker group.
+Gunakan `sudo docker compose` dalam semua perintah berikut bila user SSH Anda
+belum memiliki akses ke Docker group.
 
-## 2. Salin dan konfigurasi project
+## 2. Clone kedua repository
+
+Kedua folder harus berada pada parent directory yang sama karena Compose
+membangun backend dari folder sibling.
 
 ```bash
-git clone <URL_REPOSITORY> kh2-frontend
-https://github.com/ppmkh2sby/FrontEnd_KH2-Management-System.git
-cd kh2-frontend
+cd ~
+git clone https://github.com/ppmkh2sby/FrontEnd_KH2-Management-System.git
+git clone https://github.com/ppmkh2sby/Backend_KH2-Management-System.git
+cd ~/FrontEnd_KH2-Management-System
 cp .env.azure.example .env.azure
 nano .env.azure
 ```
 
-Set `BACKEND_UPSTREAM` ke alamat backend **yang dapat dijangkau dari container
-frontend**, misalnya:
-
-```dotenv
-# Backend dalam Compose/network Docker yang sama
-BACKEND_UPSTREAM=http://backend:8080
-
-# atau backend pada private IP VM lain di Azure
-# BACKEND_UPSTREAM=http://10.0.0.4:8080
-```
-
-Nilai tidak boleh memiliki trailing slash. Jika backend berjalan langsung di VM
-yang sama (bukan di container), gunakan alamat bridge Docker yang benar untuk
-host Anda atau private IP VM, bukan `localhost`: `localhost` dari dalam
-container mengacu pada container frontend itu sendiri.
-
-## 3. Jalankan
+Isi semua placeholder di `.env.azure`. Buat password PostgreSQL dan JWT secret
+dengan perintah berikut, lalu salin hasil masing-masing ke file tersebut:
 
 ```bash
-docker compose up --build -d
-docker compose ps
+openssl rand -base64 32
+openssl rand -base64 48
+```
+
+`APP_ORIGIN` adalah URL yang dibuka pengguna, sedangkan `APP_HOST` adalah
+hostname atau public IP tanpa `http://`/`https://`. Untuk uji awal menggunakan
+HTTP, gunakan `HTTPS_ENABLED=false`. Setelah HTTPS tersedia, ubah `APP_ORIGIN`
+menjadi `https://...` dan set `HTTPS_ENABLED=true`.
+
+## 3. Jalankan stack
+
+```bash
+sudo docker compose --env-file .env.azure up --build -d
+sudo docker compose --env-file .env.azure ps
 curl -I http://127.0.0.1/
 ```
 
-Frontend tersedia pada `http://PUBLIC_IP_VM/`. Periksa log jika container tidak
-berjalan:
+Build pertama membutuhkan waktu karena image .NET, Node, dan PostgreSQL perlu
+diunduh. Backend otomatis menjalankan migration pada database baru. Database
+mulai kosong dan seeding account/sample data sengaja tidak diaktifkan; impor
+data produksi atau buat akun administrator melalui prosedur administrasi yang
+disetujui sebelum aplikasi digunakan pengguna.
+
+## 4. Verifikasi dan log
 
 ```bash
-docker compose logs --tail=100 frontend
-```
-
-Setelah mengubah source code, deploy ulang dengan:
-
-```bash
-git pull
-docker compose up --build -d
-```
-
-## 4. Verifikasi API
-
-Di browser, buka aplikasi dan lakukan login. Dari VM Anda juga dapat memastikan
-Nginx dapat mencapai backend:
-
-```bash
+sudo docker compose --env-file .env.azure logs --tail=100 database backend frontend
 curl -i http://127.0.0.1/api/v1/auth/me
 ```
 
-Status `401` atau `405` dari endpoint yang memerlukan autentikasi menunjukkan
-proxy sudah mencapai backend; `502 Bad Gateway` berarti nilai
-`BACKEND_UPSTREAM`, port backend, atau jaringan internal perlu diperbaiki.
+Respons `401 Unauthorized` dari endpoint autentikasi menunjukkan proxy frontend
+telah mencapai backend. Respons `502 Bad Gateway` menunjukkan backend belum
+siap atau berhenti; lihat log service `backend`.
 
-## 5. HTTPS dan domain
+Untuk deploy source code terbaru:
 
-Untuk production, arahkan DNS A record domain ke public IP VM dan terminasi TLS
-di depan container, misalnya Azure Application Gateway, Azure Front Door, atau
-reverse proxy host dengan sertifikat Let's Encrypt. Pastikan proxy tersebut
-meneruskan header `X-Forwarded-Proto: https`; Nginx di container akan
-meneruskannya ke backend.
+```bash
+cd ~/FrontEnd_KH2-Management-System
+git pull --ff-only
+cd ~/Backend_KH2-Management-System
+git pull --ff-only
+cd ~/FrontEnd_KH2-Management-System
+sudo docker compose --env-file .env.azure up --build -d
+```
 
-Jika TLS diterminasi oleh layanan Azure, atur listener publik ke HTTPS (443)
-dan teruskan trafik ke frontend pada port 80 di VM. NSG sebaiknya membatasi port
-80 agar hanya dapat diakses dari layanan/proxy tersebut bila arsitektur Anda
-memungkinkan.
+## Keamanan dan data
 
-## Catatan keamanan
-
-- Simpan `.env.azure` hanya di VM; file ini tidak masuk Git.
-- Jangan menaruh password, token, atau URL backend privat di `VITE_*`: nilai
-  Vite dibundel ke JavaScript dan bisa dilihat pengguna.
-- Gunakan private IP/VNet untuk koneksi frontend ke backend bila backend berada
-  di Azure.
+- `.env.azure` berisi password dan JWT secret; file ini diabaikan Git dan harus
+  tetap hanya berada di VM.
+- Database disimpan dalam Docker volume `postgres_data`. Jangan menjalankan
+  `docker compose down -v` di production karena flag `-v` menghapus database.
+- Port backend dan PostgreSQL sengaja tidak dipublikasikan. Akses hanya melalui
+  frontend pada port 80/443.
+- Fitur face recognition membutuhkan service Face Recognition terpisah pada
+  network internal. API dan login dasar tetap dapat dijalankan tanpa membuka
+  service tersebut ke publik.
