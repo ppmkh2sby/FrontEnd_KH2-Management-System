@@ -5,5 +5,6 @@ dist
 Thumbs.db
 *.log
 .env
+.env.azure
 .env.local
 .env.*.local
