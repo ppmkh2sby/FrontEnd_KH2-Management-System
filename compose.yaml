@@ -68,11 +68,26 @@ services:
       - backend
     environment:
       BACKEND_UPSTREAM: http://backend:8080
-    ports:
-      - "80:80"
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2.8-alpine
+    depends_on:
+      - frontend
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env.azure}
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
 volumes:
+  caddy_config:
+  caddy_data:
   face_capture_data:
   face_recognition_data:
   postgres_data:

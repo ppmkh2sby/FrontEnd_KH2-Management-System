@@ -115,3 +115,26 @@ sudo docker compose --env-file .env.azure up --build -d
   `docker compose down -v` di production karena flag `-v` menghapus database.
 - Port Face Recognition, backend, dan PostgreSQL sengaja tidak dipublikasikan.
   Akses aplikasi hanya melalui frontend pada port 80/443.
+
+## HTTPS
+
+Caddy pada Compose menangani sertifikat TLS dan redirect HTTP ke HTTPS secara
+otomatis. Setelah A record domain telah mengarah ke public IP VM, buat inbound
+NSG rule TCP `443`, lalu ubah `.env.azure`:
+
+```dotenv
+APP_DOMAIN=app.example.com
+APP_ORIGIN=https://app.example.com
+APP_HOST=app.example.com;www.app.example.com;127.0.0.1;localhost
+HTTPS_ENABLED=true
+```
+
+Jalankan ulang stack dan periksa provisioning sertifikat:
+
+```bash
+sudo docker compose --env-file .env.azure up --build -d
+sudo docker compose --env-file .env.azure logs --tail=100 caddy
+```
+
+Caddy harus dapat dijangkau publik pada port 80 dan 443 agar dapat menerbitkan
+dan memperbarui sertifikat.
