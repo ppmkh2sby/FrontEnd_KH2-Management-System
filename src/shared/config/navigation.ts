@@ -57,6 +57,7 @@ const dewanGuruNavigation: DashboardNavItem[] = [
         icon: "users",
         href: "/dashboard/staff/kehadiran-santri",
       },
+      { key: "daftarkan-wajah", label: "Daftarkan Wajah", caption: "", icon: "verify", href: "/dashboard/daftarkan-wajah" },
     ],
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
