@@ -1,42 +1,51 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/app/providers/AuthProvider";
-import { completeFaceEnrollment, fetchFaceEnrollmentStatus, removeFaceEnrollmentCapture, resetFaceEnrollment, uploadFaceEnrollmentCapture } from "@/shared/lib/face-attendance";
+import { completeFaceEnrollment, fetchFaceEnrollmentStatus, resetFaceEnrollment, uploadFaceEnrollmentCapture } from "@/shared/lib/face-attendance";
 import { ApiError } from "@/shared/lib/http";
 import type { FaceEnrollmentStatus, FaceEnrollmentStatusResponse, FacePose } from "@/shared/types/face-attendance";
+import { AppIcon } from "@/shared/ui/AppIcon";
 import { SantriPageShell } from "@/widgets/app-shell/SantriPageShell";
 import { RolePageShell } from "@/widgets/app-shell/RolePageShell";
-import { FaceCamera } from "@/widgets/face-camera/FaceCamera";
+import { FaceEnrollmentCamera, type EnrollmentPose } from "@/widgets/face-camera/FaceEnrollmentCamera";
 
-const poses: Array<{ key: FacePose; title: string; instruction: string }> = [
-  { key: "front", title: "Hadap lurus", instruction: "Posisikan wajah lurus ke kamera." },
-  { key: "left", title: "Sedikit menoleh kiri", instruction: "Arahkan wajah sedikit ke kiri Anda." },
-  { key: "right", title: "Sedikit menoleh kanan", instruction: "Arahkan wajah sedikit ke kanan Anda." },
-  { key: "up", title: "Sedikit menengadah", instruction: "Angkat dagu sedikit, tetap lihat ke arah kamera." },
-  { key: "down", title: "Sedikit menunduk", instruction: "Turunkan dagu sedikit, wajah tetap terlihat jelas." },
+const poses: EnrollmentPose[] = [
+  { key: "front", shortLabel: "Depan", title: "Hadap lurus ke depan", instruction: "Sejajarkan wajah dengan outline dan tatap kamera secara langsung." },
+  { key: "left", shortLabel: "Kiri", title: "Menoleh perlahan ke kiri", instruction: "Putar wajah sedikit ke kiri Anda. Pastikan kedua mata masih terlihat." },
+  { key: "right", shortLabel: "Kanan", title: "Menoleh perlahan ke kanan", instruction: "Putar wajah sedikit ke kanan Anda. Jaga wajah tetap di dalam outline." },
+  { key: "up", shortLabel: "Atas", title: "Angkat dagu sedikit", instruction: "Tengadahkan wajah secara perlahan tanpa keluar dari area panduan." },
+  { key: "down", shortLabel: "Bawah", title: "Turunkan dagu sedikit", instruction: "Tundukkan wajah secara perlahan dan tetap arahkan mata ke layar." },
 ];
 
 export function FaceEnrollmentPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === "Santri") return <SantriPageShell>{() => <FaceEnrollmentContent />}</SantriPageShell>;
-  if (user.role === "DewanGuru") return <RolePageShell allowedRoles={["DewanGuru"]}><FaceEnrollmentContent /></RolePageShell>;
+  if (user.role === "Santri") {
+    return <SantriPageShell contentPanelClassName="min-h-[calc(100vh-1.5rem)] lg:min-h-[calc(100vh-2.5rem)]">{() => <FaceEnrollmentContent />}</SantriPageShell>;
+  }
+  if (user.role === "DewanGuru") {
+    return <RolePageShell allowedRoles={["DewanGuru"]} contentPanelClassName="min-h-[calc(100vh-1.5rem)] lg:min-h-[calc(100vh-2.5rem)]"><FaceEnrollmentContent /></RolePageShell>;
+  }
   return <Navigate to="/dashboard" replace />;
 }
 
 function FaceEnrollmentContent() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [status, setStatus] = useState<FaceEnrollmentStatus | string>("belum-terdaftar");
   const [capturedPoses, setCapturedPoses] = useState<FacePose[]>([]);
-  const [previews, setPreviews] = useState<Partial<Record<FacePose, string>>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [verifiedStep, setVerifiedStep] = useState<number | null>(null);
+  const [scannerFeedback, setScannerFeedback] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const currentPose = poses.find((pose) => !capturedPoses.includes(pose.key));
   const isRegistered = status === "terdaftar";
+  const progress = useMemo(() => Math.min(capturedPoses.length, poses.length), [capturedPoses]);
 
   const applyEnrollmentStatus = (response: FaceEnrollmentStatusResponse) => {
     setStatus(response.status);
@@ -54,7 +63,7 @@ function FaceEnrollmentContent() {
     try {
       const response = await fetchFaceEnrollmentStatus(token);
       applyEnrollmentStatus(response);
-      if (response.rejectionReason) setMessage(response.rejectionReason);
+      setMessage(response.rejectionReason ?? null);
     } catch (error) {
       setMessage(toUserMessage(error, "Status pendaftaran wajah belum dapat dimuat."));
     } finally {
@@ -64,56 +73,46 @@ function FaceEnrollmentContent() {
 
   useEffect(() => { void loadStatus(); }, [token]);
 
-  const progress = useMemo(() => Math.min(capturedPoses.length, poses.length), [capturedPoses]);
-
-  const takeCapture = async (imageData: string) => {
-    if (!token || !currentPose) return;
-    setMessage(null);
-    setIsUploading(true);
-    try {
-      const captureOrder = poses.findIndex((pose) => pose.key === currentPose.key) + 1;
-      const response = await uploadFaceEnrollmentCapture(token, captureOrder, imageData);
-      setPreviews((current) => ({ ...current, [currentPose.key]: imageData }));
-      setCapturedPoses((current) => current.includes(currentPose.key) ? current : [...current, currentPose.key]);
-      setStatus(response.status);
-      setMessage("Foto berhasil diverifikasi. Lanjutkan ke pose berikutnya.");
-    } catch (error) {
-      setMessage(toUserMessage(error, "Foto belum lolos verifikasi. Ambil ulang sesuai panduan."));
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const retake = async (pose: FacePose) => {
+  const finishEnrollment = async () => {
     if (!token) return;
-    setMessage(null);
-    setIsUploading(true);
-    try {
-      const captureOrder = poses.findIndex((item) => item.key === pose) + 1;
-      const response = await removeFaceEnrollmentCapture(token, captureOrder);
-      applyEnrollmentStatus(response);
-      setPreviews((current) => { const next = { ...current }; delete next[pose]; return next; });
-      setStatus("DalamProses");
-      setMessage("Foto dihapus. Ambil ulang pose tersebut untuk melanjutkan.");
-    } catch (error) {
-      setMessage(toUserMessage(error, "Foto belum dapat dihapus. Coba kembali."));
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const complete = async () => {
-    if (!token) return;
-    setMessage(null);
     setIsCompleting(true);
     try {
       const response = await completeFaceEnrollment(token);
       applyEnrollmentStatus(response);
-      setMessage(response.status === "terdaftar" ? "Pendaftaran wajah selesai dan profil Anda siap dipakai." : response.rejectionReason || "Pendaftaran masih perlu diperbaiki.");
+      if (response.status === "terdaftar") {
+        setIsScannerOpen(false);
+        setMessage(null);
+      } else {
+        setScannerFeedback(response.rejectionReason || "Pendaftaran belum dapat diselesaikan. Coba kembali.");
+      }
     } catch (error) {
-      setMessage(toUserMessage(error, "Pendaftaran belum dapat diselesaikan. Pastikan semua foto sudah valid."));
+      const errorMessage = toUserMessage(error, "Pendaftaran belum dapat diselesaikan. Coba kembali.");
+      setScannerFeedback(errorMessage);
+      setMessage(errorMessage);
+      setIsScannerOpen(false);
     } finally {
       setIsCompleting(false);
+    }
+  };
+
+  const takeCapture = async (imageData: string) => {
+    if (!token || !currentPose) return;
+    setScannerFeedback(null);
+    setIsUploading(true);
+    try {
+      const captureOrder = poses.findIndex((pose) => pose.key === currentPose.key) + 1;
+      const response = await uploadFaceEnrollmentCapture(token, captureOrder, imageData);
+      setCapturedPoses((current) => current.includes(currentPose.key) ? current : [...current, currentPose.key]);
+      setStatus(response.status);
+      const acceptedCount = Math.min(response.captureCount, poses.length);
+      setVerifiedStep(acceptedCount);
+      await wait(900);
+      setVerifiedStep(null);
+      if (acceptedCount >= poses.length) await finishEnrollment();
+    } catch (error) {
+      setScannerFeedback(toUserMessage(error, "Posisi wajah belum sesuai. Ikuti outline dan coba kembali."));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -123,9 +122,7 @@ function FaceEnrollmentContent() {
     setIsCompleting(true);
     try {
       await resetFaceEnrollment(token);
-      setPreviews({});
       await loadStatus();
-      setMessage("Profil wajah dihapus. Anda dapat mengambil lima foto baru.");
     } catch (error) {
       setMessage(toUserMessage(error, "Profil wajah belum dapat dihapus. Coba kembali."));
     } finally {
@@ -133,32 +130,82 @@ function FaceEnrollmentContent() {
     }
   };
 
+  if (isLoading) return <LoadingState />;
+  if (isRegistered) return <EnrollmentSuccess isResetting={isCompleting} onReset={reset} onDone={() => navigate("/dashboard")} />;
+
+  const canOpenScanner = Boolean(currentPose) && progress < poses.length;
+
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Face recognition</p>
-        <h1 className="mt-1 text-2xl font-semibold text-gray-900">Daftarkan Wajah</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-600">Daftarkan wajah Anda sendiri dengan lima pose. Identitas diproses aman menggunakan akun yang sedang login, bukan nama.</p>
+    <>
+      <div className="relative mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#f7fbf8_0%,#edf7f1_48%,#e3f2e9_100%)] px-5 py-12 text-forest-950 sm:px-10">
+        <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-forest-700/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(8,30,20,.9)_1px,transparent_1px),linear-gradient(90deg,rgba(8,30,20,.9)_1px,transparent_1px)] [background-size:32px_32px]" />
+
+        <section className="relative z-10 w-full max-w-xl text-center">
+          <div className="mx-auto grid h-20 w-20 place-items-center rounded-[1.75rem] border border-white bg-white/80 text-emerald-700 shadow-[0_22px_55px_-28px_rgba(6,78,59,0.45)] backdrop-blur"><FaceGlyph /></div>
+          <p className="mt-7 text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-700">Identitas biometrik</p>
+          <h1 className="mt-3 font-display text-4xl leading-[1.05] tracking-[-0.04em] sm:text-5xl">{progress > 0 ? "Lanjutkan pendaftaran wajah?" : "Daftarkan wajah Anda?"}</h1>
+          <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-forest-900/65 sm:text-base">Lima pose singkat membantu sistem mengenali Anda dengan lebih akurat saat melakukan presensi.</p>
+
+          {progress > 0 ? (
+            <div className="mx-auto mt-7 max-w-sm rounded-2xl border border-emerald-200/70 bg-white/70 px-5 py-4 backdrop-blur">
+              <div className="flex items-center justify-between text-xs font-bold text-emerald-800"><span>Progres tersimpan</span><span>{progress}/{poses.length}</span></div>
+              <div className="mt-3 flex gap-1.5">{poses.map((pose, index) => <span key={pose.key} className={`h-2 flex-1 rounded-full ${index < progress ? "bg-emerald-500" : "bg-emerald-100"}`} />)}</div>
+            </div>
+          ) : null}
+
+          {message ? <p role="alert" className="mx-auto mt-5 max-w-md rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">{message}</p> : null}
+
+          <div className="mx-auto mt-8 grid max-w-sm gap-3 sm:grid-cols-2">
+            <button type="button" onClick={() => { setScannerFeedback(null); if (canOpenScanner) setIsScannerOpen(true); else void finishEnrollment(); }} disabled={isCompleting} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-forest-800 px-6 text-sm font-bold text-white shadow-[0_16px_32px_-18px_rgba(8,30,20,0.8)] transition hover:bg-forest-700 active:scale-[0.99] disabled:opacity-50">
+              {isCompleting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <AppIcon name="check" className="h-5 w-5" />}
+              {progress === 0 ? "Ya, mulai" : progress < poses.length ? "Ya, lanjutkan" : "Selesaikan"}
+            </button>
+            <button type="button" onClick={() => navigate("/dashboard")} className="min-h-14 rounded-2xl border border-forest-900/10 bg-white/70 px-6 text-sm font-bold text-forest-900 transition hover:bg-white">Nanti saja</button>
+          </div>
+
+          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-forest-900/45"><AppIcon name="shield" className="h-4 w-4" /><span>Foto diproses secara aman untuk akun yang sedang aktif</span></div>
+        </section>
       </div>
-      {message ? <div role="status" className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{message}</div> : null}
-      <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold text-gray-900">Status profil wajah</h2><p className="mt-1 text-sm text-gray-600">Status diperbarui dari backend.</p></div><StatusBadge status={status} /></div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${(progress / 5) * 100}%` }} /></div>
-        <p className="mt-2 text-sm font-medium text-gray-700">{isLoading ? "Memuat status..." : `${progress}/5 foto terverifikasi`}</p>
+
+      {isScannerOpen && currentPose ? (
+        <FaceEnrollmentCamera pose={currentPose} step={progress + 1} totalSteps={poses.length} verifiedCount={progress} isAnalyzing={isUploading || isCompleting} verifiedStep={verifiedStep} feedback={scannerFeedback} onCapture={takeCapture} onClose={() => setIsScannerOpen(false)} />
+      ) : null}
+    </>
+  );
+}
+
+function LoadingState() {
+  return <div className="grid min-h-[60vh] place-items-center"><div className="text-center"><span className="mx-auto block h-10 w-10 animate-spin rounded-full border-4 border-emerald-100 border-t-emerald-600" /><p className="mt-4 text-sm font-medium text-gray-500">Memeriksa profil wajah...</p></div></div>;
+}
+
+function EnrollmentSuccess({ isResetting, onReset, onDone }: { isResetting: boolean; onReset: () => Promise<void>; onDone: () => void }) {
+  return (
+    <div className="relative mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#ecfdf5_0%,#dff7e8_55%,#cdebd9_100%)] px-5 py-12 text-forest-950">
+      <div className="absolute h-80 w-80 rounded-full border border-emerald-400/15" />
+      <div className="absolute h-60 w-60 rounded-full border border-emerald-400/20" />
+      <section className="relative z-10 max-w-lg text-center">
+        <div className="face-verified-pop mx-auto grid h-24 w-24 place-items-center rounded-full bg-emerald-600 text-white shadow-[0_24px_60px_-24px_rgba(5,150,105,0.8)]"><AppIcon name="check" className="h-12 w-12" /></div>
+        <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-700">Pendaftaran selesai</p>
+        <h1 className="mt-3 font-display text-4xl leading-tight tracking-[-0.04em] sm:text-5xl">Berhasil! Wajah Anda sudah terdaftar.</h1>
+        <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-forest-900/65 sm:text-base">Profil wajah sudah aktif dan siap digunakan untuk presensi yang tersedia.</p>
+        <button type="button" onClick={onDone} className="mt-8 min-h-14 w-full max-w-sm rounded-2xl bg-forest-800 px-6 text-sm font-bold text-white shadow-lg transition hover:bg-forest-700">Kembali ke dashboard</button>
+        <button type="button" onClick={() => void onReset()} disabled={isResetting} className="mt-3 block w-full text-sm font-semibold text-forest-900/50 transition hover:text-rose-700 disabled:opacity-40">{isResetting ? "Menghapus profil..." : "Daftarkan ulang wajah"}</button>
       </section>
-      {!isRegistered && !isLoading ? <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]"><FaceCamera onCapture={takeCapture} isBusy={isUploading} captureLabel={`Ambil foto ${progress + 1}/5`} guidance={currentPose ? `Langkah ${progress + 1}/5 — ${currentPose.title}: ${currentPose.instruction}` : undefined} /><section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"><h2 className="font-semibold text-gray-900">Lima pose wajib</h2><div className="mt-4 space-y-3">{poses.map((pose, index) => { const captured = capturedPoses.includes(pose.key); return <div key={pose.key} className="rounded-xl border border-gray-100 bg-gray-50 p-3"><div className="flex items-start justify-between gap-2"><div><p className="text-sm font-semibold text-gray-900">{index + 1}. {pose.title}</p><p className="mt-1 text-xs leading-5 text-gray-600">{pose.instruction}</p></div>{captured ? <button type="button" disabled={isUploading} onClick={() => void retake(pose.key)} className="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Ambil ulang</button> : <span className="text-xs font-medium text-gray-400">Menunggu</span>}</div>{previews[pose.key] ? <img src={previews[pose.key]} alt={`Preview ${pose.title}`} className="mt-3 h-16 w-24 rounded-lg object-cover" /> : null}</div>; })}</div>{progress === 5 ? <button type="button" onClick={() => void complete()} disabled={isCompleting || isUploading} className="mt-5 w-full rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:bg-emerald-300">{isCompleting ? "Menyelesaikan pendaftaran..." : "Selesaikan Pendaftaran Wajah"}</button> : null}</section></div> : null}
-      {isRegistered ? <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900"><h2 className="text-lg font-semibold">Wajah Anda sudah terdaftar</h2><p className="mt-2 text-sm">Profil wajah siap digunakan untuk presensi sesuai sesi yang dibuka petugas.</p><button type="button" onClick={() => void reset()} disabled={isCompleting} className="mt-4 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-60">Daftarkan ulang wajah</button></section> : null}
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const labels: Record<string, string> = { "belum-terdaftar": "Belum Terdaftar", proses: "Dalam Proses", terdaftar: "Terdaftar", ditolak: "Perlu Perbaikan" };
-  const tone = status === "terdaftar" ? "bg-emerald-100 text-emerald-800" : status === "ditolak" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800";
-  return <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${tone}`}>{labels[status] ?? status}</span>;
+function FaceGlyph() {
+  return <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-10 w-10"><path d="M10 4H7a3 3 0 0 0-3 3v3M22 4h3a3 3 0 0 1 3 3v3M10 28H7a3 3 0 0 1-3-3v-3M22 28h3a3 3 0 0 0 3-3v-3"/><path d="M10.5 14.5h.01M21.5 14.5h.01M12 21c2.4 1.8 5.6 1.8 8 0"/><path d="M9 12.5C9 8.91 11.91 6 15.5 6h1C20.09 6 23 8.91 23 12.5V18a7 7 0 0 1-14 0v-5.5Z"/></svg>;
 }
 
 function toUserMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError) return error.status === 503 ? "Layanan verifikasi wajah sedang tidak tersedia. Foto tidak dicatat sebagai hadir atau pendaftaran." : error.message;
   return error instanceof Error ? error.message : fallback;
+}
+
+function wait(milliseconds: number) {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
 }
