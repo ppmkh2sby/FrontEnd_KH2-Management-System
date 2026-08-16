@@ -28,7 +28,7 @@ export function HomePage() {
   return (
     <AppShell
       user={user}
-      navigation={getDashboardNavigation(user.role)}
+      navigation={getDashboardNavigation(user.role, santriDashboard?.profile.tim)}
       onLogout={logout}
       sidebarCaption={getSidebarCaption(user, santriDashboard)}
       contentPanelClassName={contentPanelClassName}

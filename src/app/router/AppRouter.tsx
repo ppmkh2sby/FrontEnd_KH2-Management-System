@@ -3,6 +3,9 @@ import { AttendancePage } from "@/pages/attendance/AttendancePage";
 import { AttendanceCreatePage } from "@/pages/attendance-create/AttendanceCreatePage";
 import { AttendanceRecapPage } from "@/pages/attendance-recap/AttendanceRecapPage";
 import { AttendanceTeamPage } from "@/pages/attendance-team/AttendanceTeamPage";
+import { FaceCheckInPage } from "@/pages/face-check-in/FaceCheckInPage";
+import { FaceEnrollmentPage } from "@/pages/face-enrollment/FaceEnrollmentPage";
+import { FaceSessionPage } from "@/pages/face-session/FaceSessionPage";
 import { HomePage } from "@/pages/home/HomePage";
 import { KafarahCreatePage } from "@/pages/kafarah-create/KafarahCreatePage";
 import { KafarahMinePage } from "@/pages/kafarah-mine/KafarahMinePage";
@@ -172,6 +175,33 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <AttendancePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/daftarkan-wajah"
+        element={
+          <ProtectedRoute>
+            <FaceEnrollmentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/presensi-wajah"
+        element={
+          <ProtectedRoute>
+            <FaceSessionPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/presensi-wajah/saya"
+        element={
+          <ProtectedRoute>
+            <FaceCheckInPage />
           </ProtectedRoute>
         }
       />

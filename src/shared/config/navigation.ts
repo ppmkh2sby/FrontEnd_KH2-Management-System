@@ -1,3 +1,4 @@
+import { isKtbTeam } from "@/shared/lib/face-attendance";
 import type { AppRole } from "@/shared/types/auth";
 import type { DashboardNavItem } from "@/shared/types/dashboard";
 
@@ -10,6 +11,8 @@ const santriNavigation: DashboardNavItem[] = [
     icon: "users",
     children: [
       { key: "kehadiran-saya", label: "Kehadiran Saya", caption: "", icon: "users", href: "/dashboard/kehadiran-saya" },
+      { key: "daftarkan-wajah", label: "Daftarkan Wajah", caption: "", icon: "verify", href: "/dashboard/daftarkan-wajah" },
+      { key: "presensi-wajah-saya", label: "Presensi Wajah Saya", caption: "", icon: "activity", href: "/dashboard/presensi-wajah/saya" },
       { key: "kafarah-saya", label: "Kafarah Saya", caption: "", icon: "shield", href: "/dashboard/kafarah-saya" },
       { key: "kehadiran-santri", label: "Kehadiran Santri", caption: "", icon: "users", badge: "KTB", href: "/dashboard/kehadiran-santri" },
       { key: "rekap-presensi", label: "Rekap Presensi", caption: "", icon: "clock", badge: "KTB", href: "/dashboard/rekap-presensi" },
@@ -34,6 +37,7 @@ const adminNavigation: DashboardNavItem[] = [
   { key: "dashboard", label: "Dashboard", caption: "Monitoring utama", icon: "dashboard" },
   { key: "santri", label: "Data Santri", caption: "Master data santri", icon: "users" },
   { key: "presensi", label: "Presensi", caption: "Rekap kehadiran", icon: "activity" },
+  { key: "presensi-wajah", label: "Presensi Wajah", caption: "Buka sesi presensi", icon: "verify", href: "/dashboard/presensi-wajah" },
   { key: "kafarah", label: "Kafarah", caption: "Kontrol tanggungan", icon: "shield" },
   { key: "laporan", label: "Laporan", caption: "Ringkasan sistem", icon: "log" },
 ];
@@ -57,6 +61,7 @@ const dewanGuruNavigation: DashboardNavItem[] = [
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
   { key: "log-keluar-masuk", label: "Log Keluar/Masuk", caption: "Aktivitas santri", icon: "clock", href: "/dashboard/staff/log-keluar-masuk" },
+  { key: "presensi-wajah", label: "Presensi Wajah", caption: "Buka sesi presensi", icon: "verify", href: "/dashboard/presensi-wajah" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
@@ -79,6 +84,7 @@ const pengurusNavigation: DashboardNavItem[] = [
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
   { key: "log-keluar-masuk", label: "Log Keluar/Masuk", caption: "Izin santri", icon: "clock", href: "/dashboard/staff/log-keluar-masuk" },
+  { key: "presensi-wajah", label: "Presensi Wajah", caption: "Buka sesi presensi", icon: "verify", href: "/dashboard/presensi-wajah" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
@@ -90,7 +96,7 @@ const waliNavigation: DashboardNavItem[] = [
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
-export function getDashboardNavigation(role: AppRole | string): DashboardNavItem[] {
+export function getDashboardNavigation(role: AppRole | string, santriTeam?: string | null): DashboardNavItem[] {
   switch (role) {
     case "Admin":
       return adminNavigation;
@@ -102,6 +108,10 @@ export function getDashboardNavigation(role: AppRole | string): DashboardNavItem
       return waliNavigation;
     case "Santri":
     default:
-      return santriNavigation;
+      if (!isKtbTeam(santriTeam)) return santriNavigation;
+      return santriNavigation.map((item) => item.key !== "data-santri" ? item : {
+        ...item,
+        children: [...(item.children ?? []), { key: "presensi-wajah", label: "Buka Presensi Wajah", caption: "", icon: "verify", badge: "KTB", href: "/dashboard/presensi-wajah" }],
+      });
   }
 }
