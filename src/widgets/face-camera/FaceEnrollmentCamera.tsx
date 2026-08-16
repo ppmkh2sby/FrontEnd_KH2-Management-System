@@ -124,26 +124,26 @@ export function FaceEnrollmentCamera({
     <div className="face-camera-enter fixed inset-0 z-[100] min-h-[100dvh] overflow-hidden bg-[#06140e] text-white">
       <video ref={videoRef} className={`absolute inset-0 h-full w-full scale-x-[-1] object-cover transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`} playsInline muted />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_15%,rgba(3,12,8,0.08)_50%,rgba(3,12,8,0.56)_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-gradient-to-b from-black/70 via-black/25 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-80 bg-gradient-to-t from-black/85 via-black/48 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/65 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/70 to-transparent" />
 
-      <header className="absolute inset-x-0 top-0 z-20 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-          <button type="button" onClick={onClose} disabled={isAnalyzing} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white backdrop-blur-md transition hover:bg-black/50 disabled:opacity-40" aria-label="Tutup kamera">
+      <header className="absolute inset-x-0 top-0 z-20 px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
+        <div className="mx-auto flex max-w-md items-center justify-between">
+          <button type="button" onClick={onClose} disabled={isAnalyzing} className="inline-flex h-9 w-9 items-center justify-center text-white/75 transition hover:text-white disabled:opacity-40" aria-label="Tutup kamera">
             <AppIcon name="x" className="h-5 w-5" />
           </button>
-          <div className="min-w-0 flex-1 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-200">Pendaftaran wajah</p>
-            <p className="mt-1 text-sm font-semibold text-white">Terverifikasi {verifiedCount}/{totalSteps}</p>
+          <div className="text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Verifikasi wajah</p>
+            <p className="mt-1 text-sm font-semibold text-white">{step} / {totalSteps}</p>
           </div>
-          <div className="flex h-11 min-w-11 items-center justify-center rounded-full border border-white/15 bg-black/30 px-3 text-xs font-bold backdrop-blur-md">{step}/{totalSteps}</div>
+          <span className="w-9" aria-hidden="true" />
         </div>
-        <div className="mx-auto mt-4 flex max-w-sm gap-1.5" aria-label={`${verifiedCount} dari ${totalSteps} pose terverifikasi`}>
-          {Array.from({ length: totalSteps }, (_, index) => <span key={index} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${index < verifiedCount ? "bg-emerald-400" : index === step - 1 ? "bg-white" : "bg-white/25"}`} />)}
+        <div className="mx-auto mt-3 flex max-w-xs gap-1" aria-label={`${verifiedCount} dari ${totalSteps} pose terverifikasi`}>
+          {Array.from({ length: totalSteps }, (_, index) => <span key={index} className={`h-1 flex-1 rounded-full transition-all duration-500 ${index < verifiedCount ? "bg-emerald-400" : index === step - 1 ? "bg-white" : "bg-white/25"}`} />)}
         </div>
       </header>
 
-      <main className="absolute inset-0 flex items-center justify-center px-5 pb-44 pt-32 sm:pb-48">
+      <main className="absolute inset-0 flex items-center justify-center px-5 pb-28 pt-20 sm:pb-32">
         {!isCameraActive ? (
           <div className="z-10 max-w-sm rounded-3xl border border-white/10 bg-black/40 p-6 text-center backdrop-blur-xl">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-400/15 text-emerald-200"><CameraGlyph /></div>
@@ -165,26 +165,18 @@ export function FaceEnrollmentCamera({
       </main>
 
       {verifiedStep !== null ? (
-        <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center bg-emerald-950/28 px-6 backdrop-blur-[2px]">
-          <div className="face-verified-pop rounded-[2rem] border border-emerald-200/30 bg-emerald-500/90 px-8 py-7 text-center shadow-2xl backdrop-blur-xl">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-white text-emerald-600 shadow-lg"><AppIcon name="check" className="h-8 w-8" /></div>
-            <p className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-emerald-50">Pose diterima</p>
-            <p className="mt-1 text-2xl font-bold">Terverifikasi {verifiedStep}/{totalSteps}</p>
-          </div>
+        <div className="pointer-events-none absolute inset-x-0 top-[max(5.5rem,calc(env(safe-area-inset-top)+4.5rem))] z-30 flex justify-center px-5">
+          <span className="face-verified-pop inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-lg"><AppIcon name="check" className="h-4 w-4" /> {verifiedStep}/{totalSteps}</span>
         </div>
       ) : null}
 
-      <footer className="absolute inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
-        <div className="mx-auto max-w-xl pb-3 text-center">
-          <div className="rounded-3xl border border-white/12 bg-black/32 px-5 py-4 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center justify-center gap-2 text-emerald-200"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]" /><span className="text-[10px] font-bold uppercase tracking-[0.2em]">Pemindaian otomatis · langkah {step}/{totalSteps}</span></div>
-            <h1 className="mt-2 text-xl font-bold sm:text-2xl">{pose.title}</h1>
-            <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-white/70">{pose.instruction}</p>
-            {(feedback || cameraError) && isCameraActive ? <p role="alert" className="mt-3 rounded-2xl border border-amber-300/20 bg-amber-300/12 px-3 py-2 text-xs leading-5 text-amber-100">{feedback ?? cameraError}</p> : null}
-            <button type="button" onClick={() => void capture()} disabled={!isCameraActive || isAnalyzing || verifiedStep !== null} className="mt-4 inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white px-6 text-sm font-bold text-forest-950 shadow-[0_14px_35px_rgba(0,0,0,0.28)] transition hover:bg-emerald-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/35 disabled:text-white/60">
-              {isAnalyzing ? <Spinner /> : <ScanGlyph />}{isAnalyzing ? "Menganalisis wajah..." : "Analisis sekarang"}
-            </button>
-          </div>
+      <footer className="absolute inset-x-0 bottom-0 z-20 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+        <div className="mx-auto max-w-md text-center">
+          <p className="text-lg font-semibold text-white">{pose.title}</p>
+          <p className="mt-1 text-xs text-white/70">{isAnalyzing ? "Memeriksa wajah..." : feedback ?? pose.instruction}</p>
+          <button type="button" onClick={() => void capture()} disabled={!isCameraActive || isAnalyzing || verifiedStep !== null} className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-200 transition hover:text-white disabled:opacity-50">
+            {isAnalyzing ? <Spinner /> : <ScanGlyph />}{isAnalyzing ? "Memeriksa" : "Ambil sekarang"}
+          </button>
         </div>
       </footer>
 

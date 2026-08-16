@@ -11,11 +11,11 @@ import { RolePageShell } from "@/widgets/app-shell/RolePageShell";
 import { FaceEnrollmentCamera, type EnrollmentPose } from "@/widgets/face-camera/FaceEnrollmentCamera";
 
 const poses: EnrollmentPose[] = [
-  { key: "front", shortLabel: "Depan", title: "Hadap lurus ke depan", instruction: "Sejajarkan wajah dengan outline dan tatap kamera secara langsung." },
-  { key: "left", shortLabel: "Kiri", title: "Menoleh perlahan ke kiri", instruction: "Putar wajah sedikit ke kiri Anda. Pastikan kedua mata masih terlihat." },
-  { key: "right", shortLabel: "Kanan", title: "Menoleh perlahan ke kanan", instruction: "Putar wajah sedikit ke kanan Anda. Jaga wajah tetap di dalam outline." },
-  { key: "up", shortLabel: "Atas", title: "Angkat dagu sedikit", instruction: "Tengadahkan wajah secara perlahan tanpa keluar dari area panduan." },
-  { key: "down", shortLabel: "Bawah", title: "Turunkan dagu sedikit", instruction: "Tundukkan wajah secara perlahan dan tetap arahkan mata ke layar." },
+  { key: "front", shortLabel: "Depan", title: "Hadap depan", instruction: "Tahan posisi." },
+  { key: "left", shortLabel: "Kiri", title: "Putar ke kiri", instruction: "Tahan posisi." },
+  { key: "right", shortLabel: "Kanan", title: "Putar ke kanan", instruction: "Tahan posisi." },
+  { key: "up", shortLabel: "Atas", title: "Angkat dagu", instruction: "Tahan posisi." },
+  { key: "down", shortLabel: "Bawah", title: "Turunkan dagu", instruction: "Tahan posisi." },
 ];
 
 export function FaceEnrollmentPage() {
@@ -109,8 +109,8 @@ function FaceEnrollmentContent() {
       await wait(900);
       setVerifiedStep(null);
       if (acceptedCount >= poses.length) await finishEnrollment();
-    } catch (error) {
-      setScannerFeedback(toUserMessage(error, "Posisi wajah belum sesuai. Ikuti outline dan coba kembali."));
+    } catch {
+      setScannerFeedback("Posisi belum sesuai.");
     } finally {
       setIsUploading(false);
     }
