@@ -81,7 +81,7 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-[#f4f8f3] px-4 py-8 sm:px-6 lg:py-10">
+    <main className="relative grid h-dvh min-h-0 max-h-dvh place-items-center overflow-hidden bg-[#f4f8f3] px-3 py-3 sm:px-4 sm:py-4 lg:py-6">
 
       {/* Background decorations */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -114,7 +114,7 @@ export function LoginPage() {
 
       {/* Main card */}
       <div
-        className="relative z-10 grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-forest-900/10 bg-white shadow-[0_32px_90px_rgba(8,30,20,0.16),0_0_0_1px_rgba(255,255,255,0.7)_inset] max-lg:grid-cols-1 lg:grid-cols-[1.08fr_minmax(380px,0.92fr)]"
+        className="relative z-10 grid h-[calc(100dvh-1.5rem)] max-h-full min-h-0 w-full max-w-6xl overflow-hidden rounded-[2rem] border border-forest-900/10 bg-white shadow-[0_32px_90px_rgba(8,30,20,0.16),0_0_0_1px_rgba(255,255,255,0.7)_inset] max-lg:grid-cols-1 sm:h-[calc(100dvh-2rem)] lg:h-[calc(100dvh-3rem)] lg:grid-cols-[1.08fr_minmax(380px,0.92fr)]"
       >
         {/* Column divider + left bg */}
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -125,7 +125,7 @@ export function LoginPage() {
 
         {/* Left panel — hero */}
         <section
-          className="relative z-10 hidden min-h-[34rem] min-w-0 flex-col justify-between p-10 lg:flex xl:p-12"
+          className="relative z-10 hidden min-h-0 min-w-0 flex-col justify-between overflow-hidden p-8 lg:flex xl:p-10"
           aria-labelledby="auth-hero-title"
         >
           {/* Top: branding */}
@@ -183,7 +183,7 @@ export function LoginPage() {
         </section>
 
         {/* Right panel — login form */}
-        <section className="relative z-10 flex min-h-[34rem] min-w-0 items-center bg-[#fbfcfa]/90 p-6 sm:p-8 lg:min-h-[44rem] lg:p-10">
+        <section className="relative z-10 flex min-h-0 min-w-0 items-center overflow-hidden bg-[#fbfcfa]/90 p-4 sm:p-6 lg:p-8">
           <div
             className="relative mx-auto w-full max-w-xl overflow-hidden rounded-[1.75rem] border border-forest-900/10 bg-[linear-gradient(160deg,#ffffff_0%,#f2f8f4_100%)] p-7 text-forest-900 shadow-[0_24px_64px_rgba(15,40,26,0.12),0_0_0_1px_rgba(255,255,255,0.9)_inset] motion-safe:animate-auth-fade-up sm:p-9"
             aria-labelledby="auth-card-title"
