@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { Link } from "react-router-dom";
 
 import { fetchPublicSantriTotal } from "@/shared/lib/santri-data";
@@ -92,28 +92,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="border-y border-forest-900/8 bg-white/70 text-forest-950">
-        <div className="mx-auto grid max-w-7xl divide-y divide-forest-900/8 px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
-          <AnimatedMetric
-            target={santriTotal}
-            suffix=""
-            label="SANTRI AKTIF"
-            description="pembinaan terdata dalam satu sistem"
-          />
-          <AnimatedMetric
-            target={4}
-            suffix=" Role"
-            label="AKSES TERPISAH"
-            description="santri, wali, pengurus, dan guru"
-          />
-          <AnimatedMetric
-            target={24}
-            suffix="/7"
-            label="MONITORING DATA"
-            description="aktivitas dan progres lebih mudah dipantau"
-          />
-        </div>
-      </section>
+      <LandingMetrics santriTotal={santriTotal} />
 
       <section id="tentang" className="relative overflow-hidden border-y border-forest-900/8 bg-[#fbfcfa]">
         <div className="pointer-events-none absolute -right-48 top-1/4 h-96 w-96 rounded-full bg-emerald-100/20 blur-3xl" />
@@ -260,6 +239,65 @@ function LandingHeroVisual() {
       </div>
 
     </div>
+  );
+}
+
+function LandingMetrics({ santriTotal }: { santriTotal: number }) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      setHasEnteredViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        setHasEnteredViewport(true);
+        observer.disconnect();
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section ref={sectionRef} className="border-y border-forest-900/8 bg-white/70 text-forest-950">
+      <div className="mx-auto grid max-w-7xl divide-y divide-forest-900/8 px-5 sm:px-8 md:grid-cols-3 md:divide-x md:divide-y-0">
+        <AnimatedMetric
+          target={hasEnteredViewport ? santriTotal : 0}
+          suffix=""
+          label="SANTRI AKTIF"
+          description="pembinaan terdata dalam satu sistem"
+        />
+        <AnimatedMetric
+          target={hasEnteredViewport ? 4 : 0}
+          suffix=" Role"
+          label="AKSES TERPISAH"
+          description="santri, wali, pengurus, dan guru"
+        />
+        <AnimatedMetric
+          target={hasEnteredViewport ? 24 : 0}
+          suffix="/7"
+          label="MONITORING DATA"
+          description="aktivitas dan progres lebih mudah dipantau"
+        />
+      </div>
+    </section>
   );
 }
 
