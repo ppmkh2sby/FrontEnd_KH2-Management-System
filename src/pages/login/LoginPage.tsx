@@ -81,14 +81,14 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative grid h-dvh min-h-dvh place-items-center overflow-hidden bg-[radial-gradient(ellipse_at_0%_0%,rgba(45,122,86,0.45),transparent_45%),radial-gradient(ellipse_at_100%_100%,rgba(8,30,20,0.9),transparent_55%),linear-gradient(135deg,#081e14_0%,#0f2d1e_30%,#1a4530_55%,#c8ddd0_78%,#f0f6f2_100%)] p-4 max-sm:p-3">
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-[#f4f8f3] px-4 py-8 sm:px-6 lg:py-10">
 
       {/* Background decorations */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <span className="absolute -left-8 -top-32 h-136 w-136 rounded-full bg-[radial-gradient(circle,rgba(73,146,107,0.32),transparent_65%)] blur-2xl motion-safe:animate-auth-orb-float" />
-        <span className="absolute -right-10 -bottom-48 h-120 w-120 rounded-full bg-[radial-gradient(circle,rgba(246,250,247,0.7),transparent_65%)] blur-2xl motion-safe:animate-auth-orb-float motion-safe:[animation-duration:22s]" />
-        <span className="absolute left-[35%] -top-24 h-88 w-88 rounded-full bg-[radial-gradient(circle,rgba(45,122,86,0.18),transparent_70%)] blur-2xl motion-safe:animate-auth-orb-float motion-safe:[animation-duration:14s]" />
-        <span className="absolute inset-0 opacity-[0.07] bg-[linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] bg-size-[5rem_5rem] mask-[linear-gradient(180deg,rgba(0,0,0,0.8),transparent_82%)] motion-safe:animate-auth-grid-shift" />
+        <span className="absolute -left-20 -top-36 h-136 w-136 rounded-full bg-[radial-gradient(circle,rgba(72,144,107,0.2),transparent_65%)] blur-2xl motion-safe:animate-auth-orb-float" />
+        <span className="absolute -bottom-48 -right-20 h-120 w-120 rounded-full bg-[radial-gradient(circle,rgba(199,225,207,0.7),transparent_65%)] blur-2xl motion-safe:animate-auth-orb-float motion-safe:[animation-duration:22s]" />
+        <span className="absolute left-[42%] -top-24 h-88 w-88 rounded-full bg-[radial-gradient(circle,rgba(45,122,86,0.12),transparent_70%)] blur-2xl motion-safe:animate-auth-orb-float motion-safe:[animation-duration:14s]" />
+        <span className="absolute inset-0 opacity-[0.24] bg-[linear-gradient(rgba(8,30,20,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(8,30,20,0.035)_1px,transparent_1px)] bg-size-[5rem_5rem] mask-[linear-gradient(180deg,rgba(0,0,0,0.7),transparent_82%)] motion-safe:animate-auth-grid-shift" />
 
         <div className="absolute left-[-10%] top-[9%] hidden w-max gap-2.5 whitespace-nowrap opacity-[0.09] lg:flex motion-safe:animate-auth-marquee-left">
           {[...loginKeywords, ...loginKeywords].map((item, index) => (
@@ -114,61 +114,58 @@ export function LoginPage() {
 
       {/* Main card */}
       <div
-        className="relative z-10 grid w-full max-w-275 overflow-hidden rounded-4xl border border-white/10 shadow-[0_40px_100px_rgba(4,14,9,0.38),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-2xl max-md:h-[calc(100dvh-1.4rem)] max-lg:grid-cols-1 lg:grid-cols-[1fr_minmax(370px,410px)] h-[min(720px,calc(100dvh-2rem))]"
-        style={{ background: "rgba(255,255,255,0.06)" }}
+        className="relative z-10 grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-forest-900/10 bg-white shadow-[0_32px_90px_rgba(8,30,20,0.16),0_0_0_1px_rgba(255,255,255,0.7)_inset] max-lg:grid-cols-1 lg:grid-cols-[1.08fr_minmax(380px,0.92fr)]"
       >
         {/* Column divider + left bg */}
         <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div className="absolute inset-y-0 left-0 max-lg:bottom-[42%] max-lg:right-0 lg:right-[37.6%] bg-[radial-gradient(ellipse_at_15%_20%,rgba(72,144,107,0.22),transparent_40%),linear-gradient(160deg,rgba(7,24,16,0.97)_0%,rgba(14,40,26,0.95)_100%)] max-lg:bg-[linear-gradient(170deg,rgba(7,24,16,0.97)_0%,rgba(12,34,22,0.95)_100%)]" />
-          <div className="absolute bottom-6 left-[calc(62.4%-0.5px)] top-6 hidden w-px bg-[linear-gradient(180deg,transparent,rgba(60,120,87,0.22)_20%,rgba(60,120,87,0.22)_80%,transparent)] lg:block" />
-          <div className="absolute left-6 right-6 top-[42%] h-px bg-[linear-gradient(90deg,transparent,rgba(60,120,87,0.22)_20%,rgba(60,120,87,0.22)_80%,transparent)] lg:hidden max-sm:hidden" />
+          <div className="absolute inset-y-0 left-0 max-lg:bottom-[40%] max-lg:right-0 lg:right-[46%] bg-[radial-gradient(ellipse_at_15%_20%,rgba(72,144,107,0.25),transparent_40%),linear-gradient(160deg,#081e14_0%,#123626_100%)] max-lg:bg-[linear-gradient(170deg,#081e14_0%,#174c34_100%)]" />
+          <div className="absolute bottom-8 left-[calc(54%-0.5px)] top-8 hidden w-px bg-[linear-gradient(180deg,transparent,rgba(120,190,151,0.22)_20%,rgba(120,190,151,0.22)_80%,transparent)] lg:block" />
+          <div className="absolute left-8 right-8 top-[40%] h-px bg-[linear-gradient(90deg,transparent,rgba(120,190,151,0.22)_20%,rgba(120,190,151,0.22)_80%,transparent)] lg:hidden max-sm:hidden" />
         </div>
 
         {/* Left panel — hero */}
         <section
-          className="relative z-10 flex h-full min-w-0 flex-col justify-between p-8 max-lg:p-6 max-sm:hidden"
+          className="relative z-10 hidden min-h-[34rem] min-w-0 flex-col justify-between p-10 lg:flex xl:p-12"
           aria-labelledby="auth-hero-title"
         >
           {/* Top: branding */}
           <div className="motion-safe:animate-auth-fade-up">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/14 bg-white/8 shadow-[0_4px_16px_rgba(0,0,0,0.2)] motion-safe:animate-auth-logo-pop">
-                <span className="text-[0.75rem] font-extrabold tracking-tight text-mist-50">KH2</span>
-                <span className="absolute -inset-0.75 rounded-[0.9rem] border border-forest-500/30 motion-safe:animate-auth-pulse-ring" />
+            <div className="mb-7 flex items-center gap-3">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 p-1 shadow-[0_8px_24px_rgba(0,0,0,0.18)] motion-safe:animate-auth-logo-pop">
+                <img src="/assets/images/logo_ppm.webp" alt="Logo PPM KH2" className="h-full w-full object-contain" />
+                <span className="absolute -inset-1 rounded-[1.1rem] border border-forest-500/30 motion-safe:animate-auth-pulse-ring" />
               </div>
               <div>
-                <p className="mb-0.5 text-[0.63rem] font-bold uppercase leading-none tracking-[0.2em] text-mist-100/55">
+                <p className="mb-1 text-[0.63rem] font-bold uppercase leading-none tracking-[0.2em] text-forest-500">
                   PPM KH2
                 </p>
-                <p className="text-[0.78rem] font-bold leading-none text-mist-50/90">
-                  KH2-ManagementSystem
-                </p>
+                <p className="text-[0.82rem] font-bold leading-none text-mist-50">KH2 Management System</p>
               </div>
             </div>
 
-            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/7 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-mist-100/70">
+            <span className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-forest-500/25 bg-forest-500/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-forest-500">
               <span className="h-1.5 w-1.5 rounded-full bg-forest-500" />
-              Portal Login Utama
+              Secure workspace
             </span>
 
             <h1
               id="auth-hero-title"
-              className="m-0 font-display text-[clamp(2.2rem,4.2vw,3.6rem)] leading-[0.9] tracking-[-0.05em] text-mist-50 drop-shadow-[0_8px_24px_rgba(3,10,7,0.18)] max-lg:text-[clamp(1.9rem,5.5vw,2.8rem)]"
+              className="m-0 max-w-xl font-display text-[clamp(2.5rem,4.2vw,4.2rem)] leading-[0.92] tracking-[-0.055em] text-mist-50 drop-shadow-[0_8px_24px_rgba(3,10,7,0.18)]"
             >
               Sistem Manajemen PPM Khoirul Huda 2
             </h1>
 
             <p className="mt-4 max-w-md text-[0.91rem] leading-[1.62] text-mist-100/70 max-lg:text-[0.88rem]">
-              Sistem manajemen terintregasi untuk mendukung operasional dan pengelolaan data di PPM Khoirul Huda 2.
+              Satu ruang terstruktur untuk memantau kehadiran, progres, dan aktivitas seluruh civitas KH2.
             </p>
           </div>
 
           {/* Bottom: highlight cards */}
-          <div className="grid gap-2.5 lg:grid-cols-3 max-[900px]:grid-cols-1 max-[900px]:gap-2">
+          <div className="grid gap-3 lg:grid-cols-3">
             {loginHighlights.map((item, index) => (
               <article
                 key={item.title}
-                className="group rounded-xl border border-white/8 bg-white/5 p-3.5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/14 hover:bg-white/8 motion-safe:animate-auth-fade-up"
+                className="group rounded-2xl border border-white/10 bg-white/6 p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-forest-500/35 hover:bg-white/10 motion-safe:animate-auth-fade-up"
                 style={{ animationDelay: `${120 + index * 70}ms` }}
               >
                 <div className="mb-2.5 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/8 text-forest-500 transition group-hover:border-forest-500/30 group-hover:bg-forest-500/12">
@@ -186,9 +183,9 @@ export function LoginPage() {
         </section>
 
         {/* Right panel — login form */}
-        <section className="relative z-10 flex h-full min-w-0 items-center p-4 max-sm:p-3">
+        <section className="relative z-10 flex min-h-[34rem] min-w-0 items-center bg-[#fbfcfa]/90 p-6 sm:p-8 lg:min-h-[44rem] lg:p-10">
           <div
-            className="relative w-full overflow-hidden rounded-[1.6rem] border border-forest-800/14 bg-[linear-gradient(160deg,rgba(252,254,253,0.99)_0%,rgba(242,248,244,0.97)_100%)] p-7 text-forest-900 shadow-[0_24px_64px_rgba(15,40,26,0.14),0_0_0_1px_rgba(255,255,255,0.7)_inset] motion-safe:animate-auth-fade-up max-sm:p-5"
+            className="relative mx-auto w-full max-w-xl overflow-hidden rounded-[1.75rem] border border-forest-900/10 bg-[linear-gradient(160deg,#ffffff_0%,#f2f8f4_100%)] p-7 text-forest-900 shadow-[0_24px_64px_rgba(15,40,26,0.12),0_0_0_1px_rgba(255,255,255,0.9)_inset] motion-safe:animate-auth-fade-up sm:p-9"
             aria-labelledby="auth-card-title"
           >
             {/* Decorative glows */}
@@ -202,10 +199,17 @@ export function LoginPage() {
 
             {/* Card header */}
             <div className="relative mb-5">
+              <div className="mb-7 flex items-center gap-3 lg:hidden">
+                <img src="/assets/images/logo_ppm.webp" alt="Logo PPM KH2" className="h-10 w-10 rounded-xl object-contain" />
+                <div>
+                  <p className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-emerald-700">PPM KH2</p>
+                  <p className="text-sm font-bold text-forest-950">KH2 Management System</p>
+                </div>
+              </div>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-forest-700/12 bg-forest-700/6 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-widest text-forest-700/80">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-forest-600" />
-                  Secure Access
+                  Portal login
                 </span>
                 <Link
                   to="/"
@@ -223,10 +227,10 @@ export function LoginPage() {
                 id="auth-card-title"
                 className="font-display text-[clamp(1.7rem,3.2vw,2.15rem)] leading-[0.95] tracking-[-0.04em] text-forest-900"
               >
-                Masuk ke workspace
+                Masuk ke sistem KH2
               </h2>
               <p className="mt-2.5 text-[0.87rem] leading-[1.58] text-forest-900/65">
-                Gunakan identitas akun aktif untuk mengakses sistem manajemen pondok.
+                Gunakan identitas akun aktif untuk melanjutkan ke dashboard Anda.
               </p>
             </div>
 
