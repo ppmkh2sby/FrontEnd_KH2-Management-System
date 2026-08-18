@@ -3,10 +3,37 @@ import { Link } from "react-router-dom";
 
 import { fetchPublicSantriTotal } from "@/shared/lib/santri-data";
 
-const features = [
-  ["Presensi", "Rekap kehadiran yang jelas untuk setiap sesi."],
-  ["Progress", "Perkembangan santri tersusun dalam satu tempat."],
-  ["Akses wali", "Informasi penting mudah dipantau dari akun wali."],
+const featureShowcase = [
+  {
+    number: "01",
+    label: "Presensi Santri",
+    title: "Kehadiran yang mudah dipantau.",
+    description: "Catatan hadir, izin, sakit, dan alpa tersusun dalam satu tampilan yang ringkas dan mudah dibaca.",
+    image: "/assets/images/landing/fitur/Presensi%20Santri.png",
+    alt: "Tampilan presensi santri KH2",
+  },
+  {
+    number: "02",
+    label: "Dashboard Santri",
+    title: "Satu ringkasan untuk perkembangan santri.",
+    description: "Kehadiran, kafarah, progress keilmuan, dan aktivitas santri dirangkum dalam dashboard yang informatif.",
+    image: "/assets/images/landing/fitur/Dashboard%20Santri.png",
+    alt: "Tampilan dashboard santri KH2",
+  },
+  {
+    number: "03",
+    label: "Fitur Tim",
+    title: "Rekap tim yang siap digunakan.",
+    description: "Pantau rekap presensi tim dengan filter yang jelas untuk membantu pengurus mengambil keputusan lebih cepat.",
+    image: "/assets/images/landing/fitur/Fitur%20Tim.png",
+    alt: "Tampilan fitur rekap tim KH2",
+  },
+] as const;
+
+const featureImagePositions = [
+  "left-0 top-3 w-[88%] -rotate-[4deg]",
+  "right-0 top-24 w-[82%] rotate-[4deg]",
+  "left-8 bottom-0 w-[78%] -rotate-[2deg]",
 ] as const;
 
 const aboutPillars = [
@@ -23,6 +50,8 @@ const galleryItems = [
 
 export function LandingPage() {
   const [santriTotal, setSantriTotal] = useState(0);
+  const [activeFeature, setActiveFeature] = useState(0);
+  const selectedFeature = featureShowcase[activeFeature];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -110,7 +139,7 @@ export function LandingPage() {
               Alur kerja yang lebih ringkas<br className="hidden sm:block" /> untuk civitas KH2.
             </h2>
             <p className="mt-7 max-w-xl text-base leading-7 text-forest-900/64 sm:text-lg">
-              Satu sistem untuk administrasi, pembinaan, dan pelaporan.
+              Menghubungkan informasi dan aktivitas KH2 dalam satu ruang yang terstruktur.
             </p>
 
             <div className="mt-16 grid border-t border-forest-900/12 sm:grid-cols-3 sm:gap-8">
@@ -134,14 +163,77 @@ export function LandingPage() {
             </div>
             <Link to="/login" className="text-sm font-bold text-emerald-700 transition hover:text-forest-950">Masuk ke sistem <span aria-hidden="true">→</span></Link>
           </div>
-          <div className="mt-10 grid gap-px overflow-hidden rounded-[1.5rem] border border-forest-900/10 bg-forest-900/10 md:grid-cols-3">
-            {features.map(([title, description], index) => (
-              <article key={title} className="bg-[#f2f7f3] p-6 sm:p-8">
-                <p className="text-xs font-bold text-emerald-700">0{index + 1}</p>
-                <h3 className="mt-8 text-xl font-bold tracking-[-0.03em]">{title}</h3>
-                <p className="mt-3 max-w-xs text-sm leading-7 text-forest-900/60">{description}</p>
-              </article>
-            ))}
+          <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(20rem,0.92fr)] lg:items-center lg:gap-16">
+            <div className="relative min-h-[25rem] sm:min-h-[32rem]" aria-label="Preview fitur utama KH2">
+              <div className="absolute inset-x-8 top-10 h-64 rounded-full bg-emerald-200/35 blur-3xl sm:inset-x-16 sm:h-80" />
+              <div className="absolute inset-x-8 bottom-6 h-16 rounded-full bg-forest-900/10 blur-2xl sm:inset-x-20" />
+
+              {featureShowcase.map((feature, index) => {
+                const isActive = activeFeature === index;
+
+                return (
+                  <button
+                    key={feature.label}
+                    type="button"
+                    aria-label={`Tampilkan ${feature.label}`}
+                    aria-pressed={isActive}
+                    onClick={() => setActiveFeature(index)}
+                    className={`absolute overflow-hidden rounded-[1.35rem] border-[10px] border-white bg-white text-left shadow-[0_24px_60px_rgba(8,30,20,0.16)] transition duration-500 ease-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-4 ${featureImagePositions[index]} ${
+                      isActive ? "z-30 scale-[1.035] shadow-[0_30px_80px_rgba(8,30,20,0.22)]" : "z-10 saturate-[0.82] hover:z-40 hover:scale-[1.02]"
+                    }`}
+                  >
+                    <img
+                      src={feature.image}
+                      alt={feature.alt}
+                      width="1504"
+                      height="806"
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[16/9] w-full object-cover object-top"
+                    />
+                    <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-forest-900 shadow-sm backdrop-blur-sm">
+                      {feature.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="relative">
+              <div className="mb-8 max-w-md">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">{selectedFeature.number} / 03</p>
+                <h3 className="mt-5 font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-[1.02] tracking-[-0.05em] text-forest-950">
+                  {selectedFeature.title}
+                </h3>
+                <p className="mt-5 text-base leading-8 text-forest-900/62">{selectedFeature.description}</p>
+              </div>
+
+              <div className="divide-y divide-forest-900/12 border-y border-forest-900/12">
+                {featureShowcase.map((feature, index) => {
+                  const isActive = activeFeature === index;
+
+                  return (
+                    <button
+                      key={feature.label}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setActiveFeature(index)}
+                      className={`flex w-full items-center gap-4 py-4 text-left transition ${isActive ? "text-forest-950" : "text-forest-900/45 hover:text-forest-900/80"}`}
+                    >
+                      <span className={`text-xs font-bold tracking-[0.16em] ${isActive ? "text-emerald-700" : "text-forest-900/30"}`}>
+                        {feature.number}
+                      </span>
+                      <span className="flex-1 text-sm font-bold sm:text-base">{feature.label}</span>
+                      <span className={`text-lg transition-transform ${isActive ? "translate-x-0 text-emerald-700" : "-translate-x-1"}`} aria-hidden="true">
+                        →
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-forest-900/35">Pilih tampilan untuk melihat detail</p>
+            </div>
           </div>
         </div>
       </section>
