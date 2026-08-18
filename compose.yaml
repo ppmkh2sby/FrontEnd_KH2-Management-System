@@ -14,12 +14,27 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  face-recognition:
+    build:
+      # Copy Face_Recognition_KH2 next to the frontend and backend repositories.
+      context: ../Face_Recognition_KH2
+    environment:
+      FACE_SERVICE_API_KEY: ${FACE_SERVICE_API_KEY:?Set FACE_SERVICE_API_KEY in .env.azure}
+      FACE_MAX_CONCURRENCY: ${FACE_MAX_CONCURRENCY:-2}
+    expose:
+      - "8000"
+    restart: unless-stopped
+    volumes:
+      - face_recognition_data:/app/data
+
   backend:
     build:
       # Clone Backend_KH2-Management-System next to this frontend repository.
       context: ../Backend_KH2-Management-System
     depends_on:
       database:
+        condition: service_healthy
+      face-recognition:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -35,6 +50,8 @@ services:
       AllowedHosts: ${APP_HOST:?Set APP_HOST in .env.azure}
       # Trust the frontend Nginx container to pass the original HTTPS scheme.
       ReverseProxy__KnownNetworks__0: 172.16.0.0/12
+      FaceRecognition__BaseUrl: http://face-recognition:8000
+      FaceRecognition__ServiceApiKey: ${FACE_SERVICE_API_KEY:?Set FACE_SERVICE_API_KEY in .env.azure}
     expose:
       - "8080"
     restart: unless-stopped
@@ -51,10 +68,26 @@ services:
       - backend
     environment:
       BACKEND_UPSTREAM: http://backend:8080
-    ports:
-      - "80:80"
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2.8-alpine
+    depends_on:
+      - frontend
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env.azure}
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
 volumes:
+  caddy_config:
+  caddy_data:
   face_capture_data:
+  face_recognition_data:
   postgres_data:

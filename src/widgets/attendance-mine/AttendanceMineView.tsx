@@ -208,8 +208,7 @@ export function AttendanceMineView({ dashboard, errorMessage, isLoading }: Atten
                         <td className="px-4 py-3 text-xs text-gray-600">{row.category}</td>
                         <td className="px-4 py-3 text-xs text-gray-600">{row.time}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusClass(row.status)}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${getStatusDotClass(row.status)}`} />
+                          <span className={`text-xs font-semibold ${getStatusClass(row.status)}`}>
                             {row.status}
                           </span>
                         </td>
@@ -284,8 +283,7 @@ export function AttendanceMineView({ dashboard, errorMessage, isLoading }: Atten
                       <p className="flex-1 text-sm font-semibold leading-5 text-gray-900">
                         {item.category} {item.time}
                       </p>
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap ${getStatusClass(item.status)}`}>
-                        <span className={`h-1 w-1 rounded-full ${getStatusDotClass(item.status)}`} />
+                      <span className={`whitespace-nowrap text-[10px] font-semibold ${getStatusClass(item.status)}`}>
                         {item.status}
                       </span>
                     </div>
@@ -409,8 +407,7 @@ function StatusFilterBadge({ value }: { value: string }) {
   const status = mapStatus(value);
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${getStatusClass(status)}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${getStatusDotClass(status)}`} />
+    <span className={`text-xs font-medium ${getStatusClass(status)}`}>
       {status}
     </span>
   );
@@ -475,37 +472,18 @@ function getStatusClass(status: AttendanceRow["status"]) {
   switch (status.toLowerCase()) {
     case "Hadir":
     case "hadir":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "text-emerald-700";
     case "Izin":
     case "izin":
-      return "border-orange-200 bg-orange-50 text-orange-700";
+      return "text-orange-700";
     case "Sakit":
     case "sakit":
-      return "border-gray-200 bg-gray-50 text-gray-700";
+      return "text-slate-600";
     case "Alpa":
     case "alpa":
-      return "border-red-200 bg-red-50 text-red-700";
+      return "text-red-700";
     default:
-      return "border-gray-200 bg-gray-50 text-gray-600";
-  }
-}
-
-function getStatusDotClass(status: AttendanceRow["status"]) {
-  switch (status.toLowerCase()) {
-    case "Hadir":
-    case "hadir":
-      return "bg-emerald-600";
-    case "Izin":
-    case "izin":
-      return "bg-orange-600";
-    case "Sakit":
-    case "sakit":
-      return "bg-gray-600";
-    case "Alpa":
-    case "alpa":
-      return "bg-red-600";
-    default:
-      return "bg-gray-400";
+      return "text-gray-600";
   }
 }
 

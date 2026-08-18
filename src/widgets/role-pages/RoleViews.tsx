@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { AuthUser } from "@/shared/types/auth";
+import type { SantriDashboardResponse } from "@/shared/types/dashboard";
 import { AppIcon } from "@/shared/ui/AppIcon";
 
 type WaliTabKey = "overview" | "presensi" | "progress" | "log";
@@ -15,16 +16,22 @@ const waliTabs: Array<{ key: WaliTabKey; label: string; href: string }> = [
 
 export function WaliChildNavigation({
   activeTab,
+  childName,
+  childNis,
 }: {
   activeTab: WaliTabKey;
+  childName?: string;
+  childNis?: string;
 }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-emerald-600">Sedang dipantau</p>
-          <h2 className="text-2xl font-semibold text-gray-900">Data anak belum tersedia</h2>
-          <p className="mt-1 text-sm text-gray-500">Hubungkan data santri saat backend role wali sudah siap.</p>
+          <h2 className="text-2xl font-semibold text-gray-900">{childName ?? "Data anak belum tersedia"}</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            {childName ? `NIS ${childNis ?? "-"}` : "Hubungkan data santri saat backend role wali sudah siap."}
+          </p>
         </div>
 
         <button
@@ -60,7 +67,22 @@ export function WaliChildNavigation({
   );
 }
 
-export function WaliOverviewView({ user }: { user: AuthUser }) {
+export function WaliOverviewView({
+  user,
+  dashboard,
+  errorMessage,
+  isLoading,
+}: {
+  user: AuthUser;
+  dashboard: SantriDashboardResponse | null;
+  errorMessage: string | null;
+  isLoading: boolean;
+}) {
+  const child = dashboard?.profile;
+  const attendance = dashboard?.attendance;
+  const progress = dashboard?.progress;
+  const logs = dashboard?.logs;
+
   const featureCards = [
     {
       label: "Dashboard Anak",
@@ -94,13 +116,15 @@ export function WaliOverviewView({ user }: { user: AuthUser }) {
 
   return (
     <div className="space-y-6">
-      <WaliChildNavigation activeTab="overview" />
+      <WaliChildNavigation activeTab="overview" childName={child?.fullName} childNis={child?.nis} />
 
       <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-6">
         <p className="text-sm text-emerald-600">Assalamualaikum, {user.fullName}</p>
-        <h2 className="mt-1 text-2xl font-semibold text-gray-900">Dashboard Anak: Data anak belum tersedia</h2>
+        <h2 className="mt-1 text-2xl font-semibold text-gray-900">
+          {isLoading ? "Dashboard Anak: Menghubungkan data" : `Dashboard Anak: ${child?.fullName ?? "Data anak belum tersedia"}`}
+        </h2>
         <p className="mt-3 text-sm text-gray-600">
-          Ringkasan ini menyesuaikan fitur yang aktif: Kehadiran, Progress Keilmuan, dan Log Keluar/Masuk.
+          {errorMessage ?? "Ringkasan kehadiran, progress keilmuan, dan aktivitas anak Anda."}
         </p>
         <div className="mt-5 flex flex-wrap gap-3 text-sm">
           <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2">
@@ -109,7 +133,7 @@ export function WaliOverviewView({ user }: { user: AuthUser }) {
           </span>
           <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2">
             <AppIcon name="users" className="h-4 w-4 text-emerald-500" />
-            Kode santri: <span className="font-mono text-gray-900">-</span>
+            Kode santri: <span className="font-mono text-gray-900">{child?.nis ?? "-"}</span>
           </span>
         </div>
       </div>
@@ -135,10 +159,15 @@ export function WaliOverviewView({ user }: { user: AuthUser }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Kehadiran Tercatat" value="0" hint="Hadir 0 | Izin 0 | Alpa 0" accent="text-emerald-700" />
-        <MetricCard label="Persentase Kehadiran" value="0%" hint="Dari seluruh data presensi anak" />
-        <MetricCard label="Progress Keilmuan" value="0%" hint="0 selesai • 0 berjalan" />
-        <MetricCard label="Log Keluar/Masuk" value="0" hint="0 data bulan ini" />
+        <MetricCard
+          label="Kehadiran Tercatat"
+          value={String(attendance?.total ?? 0)}
+          hint={`Hadir ${attendance?.hadir ?? 0} | Izin ${attendance?.izin ?? 0} | Alpa ${attendance?.alpha ?? 0}`}
+          accent="text-emerald-700"
+        />
+        <MetricCard label="Persentase Kehadiran" value={`${attendance?.persentase ?? 0}%`} hint="Dari seluruh data presensi anak" />
+        <MetricCard label="Progress Keilmuan" value={`${progress?.average ?? 0}%`} hint={`${progress?.completed ?? 0} selesai • ${progress?.inProgress ?? 0} berjalan`} />
+        <MetricCard label="Log Keluar/Masuk" value={String(logs?.total ?? 0)} hint={`${logs?.tercatat ?? 0} data tercatat`} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
@@ -148,7 +177,7 @@ export function WaliOverviewView({ user }: { user: AuthUser }) {
           actionLabel="Lihat semua"
           actionHref="/dashboard/wali/presensi"
         >
-          <EmptyBox label="Belum ada data kehadiran." />
+          <EmptyBox label={attendance?.recent[0] ? `${attendance.recent[0].nama}: ${attendance.recent[0].status}` : "Belum ada data kehadiran."} />
         </SectionCard>
 
         <SectionCard
@@ -157,7 +186,7 @@ export function WaliOverviewView({ user }: { user: AuthUser }) {
           actionLabel="Lihat semua"
           actionHref="/dashboard/wali/progress-keilmuan"
         >
-          <EmptyBox label="Belum ada data progress." />
+          <EmptyBox label={progress?.recent[0] ? progress.recent[0].judul : "Belum ada data progress."} />
         </SectionCard>
 
         <SectionCard
@@ -166,7 +195,7 @@ export function WaliOverviewView({ user }: { user: AuthUser }) {
           actionLabel="Lihat semua"
           actionHref="/dashboard/wali/log-keluar-masuk"
         >
-          <EmptyBox label="Belum ada data log keluar/masuk." />
+          <EmptyBox label={logs?.recent[0] ? `${logs.recent[0].jenis}: ${logs.recent[0].status}` : "Belum ada data log keluar/masuk."} />
         </SectionCard>
       </div>
     </div>

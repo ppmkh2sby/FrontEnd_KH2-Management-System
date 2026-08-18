@@ -13,7 +13,6 @@ import {
   fetchSantriList,
   formatShortDate,
   getAttendanceStatusClass,
-  getAttendanceStatusDotClass,
   mapAttendanceStatus,
   updatePresensi,
 } from "@/shared/lib/santri-data";
@@ -372,8 +371,7 @@ function AttendanceTeamContent() {
                       <td className="truncate px-4 py-3 text-[11px] leading-5 text-gray-600">{capitalize(row.kategori)}</td>
                       <td className="px-4 py-3 text-[11px] leading-5 text-gray-600">{capitalize(row.waktu)}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-medium ${getAttendanceStatusClass(row.status)}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${getAttendanceStatusDotClass(row.status)}`} />
+                        <span className={`text-[10px] font-semibold ${getAttendanceStatusClass(row.status)}`}>
                           {mapAttendanceStatus(row.status)}
                         </span>
                       </td>
@@ -469,8 +467,7 @@ function AttendanceTeamContent() {
                 selected={filters.status}
                 onToggle={(value) => setFilters((current) => ({ ...current, status: toggleValue(current.status, value) }))}
                 renderLabel={(value) => (
-                  <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${getAttendanceStatusClass(value)}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${getAttendanceStatusDotClass(value)}`} />
+                  <span className={`text-xs font-medium ${getAttendanceStatusClass(value)}`}>
                     {mapAttendanceStatus(value)}
                   </span>
                 )}

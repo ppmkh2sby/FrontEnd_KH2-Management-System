@@ -78,6 +78,11 @@ export async function fetchSantriList(accessToken: string) {
   return http<SantriListResponse>("/api/v1/santri?page=1&perPage=200", { accessToken });
 }
 
+export async function fetchPublicSantriTotal(signal?: AbortSignal) {
+  const response = await http<{ totalCount: number }>("/api/v1/public/santri-total", { signal });
+  return response.totalCount;
+}
+
 export async function fetchPresensiList(accessToken: string) {
   return http<PresensiListResponse>("/api/v1/presensi?page=1&perPage=500", { accessToken });
 }
@@ -334,30 +339,15 @@ export function mapAttendanceStatus(status: AttendanceStatusCode | string) {
 export function getAttendanceStatusClass(status: AttendanceStatusCode | string) {
   switch (status) {
     case "hadir":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "text-emerald-700";
     case "izin":
-      return "border-orange-200 bg-orange-50 text-orange-700";
+      return "text-orange-700";
     case "sakit":
-      return "border-gray-200 bg-gray-50 text-gray-700";
+      return "text-slate-600";
     case "alpa":
-      return "border-red-200 bg-red-50 text-red-700";
+      return "text-red-700";
     default:
-      return "border-gray-200 bg-gray-50 text-gray-700";
-  }
-}
-
-export function getAttendanceStatusDotClass(status: AttendanceStatusCode | string) {
-  switch (status) {
-    case "hadir":
-      return "bg-emerald-600";
-    case "izin":
-      return "bg-orange-600";
-    case "sakit":
-      return "bg-gray-600";
-    case "alpa":
-      return "bg-red-600";
-    default:
-      return "bg-gray-600";
+      return "text-gray-600";
   }
 }
 

@@ -1,4 +1,5 @@
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { getGenericRoleDashboard, getRoleDisplayName } from "@/shared/config/dashboard";
 import { formatNumber } from "@/shared/lib/formatNumber";
@@ -62,8 +63,11 @@ export function DashboardOverview({
   santriDashboardError,
   isSantriDashboardLoading,
 }: DashboardOverviewProps) {
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  let content: ReactNode;
+
   if (user.role === "Santri") {
-    return (
+    content = (
       <SantriDashboard
         user={user}
         dashboard={santriDashboard ?? null}
@@ -71,17 +75,76 @@ export function DashboardOverview({
         isLoading={Boolean(isSantriDashboardLoading)}
       />
     );
+  } else if (user.role === "DewanGuru" || user.role === "Pengurus") {
+    content = <StaffDashboard user={user} />;
+  } else if (user.role === "WaliSantri") {
+    content = (
+      <WaliOverviewView
+        user={user}
+        dashboard={santriDashboard ?? null}
+        errorMessage={santriDashboardError ?? null}
+        isLoading={Boolean(isSantriDashboardLoading)}
+      />
+    );
+  } else {
+    content = <StandardRoleDashboard user={user} />;
   }
 
-  if (user.role === "DewanGuru" || user.role === "Pengurus") {
-    return <StaffDashboard user={user} />;
-  }
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      return;
+    }
 
-  if (user.role === "WaliSantri") {
-    return <WaliOverviewView user={user} />;
-  }
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const normalizedX = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const normalizedY = (event.clientY - bounds.top) / bounds.height - 0.5;
 
-  return <StandardRoleDashboard user={user} />;
+    setTilt({
+      x: Number((normalizedY * -10).toFixed(2)),
+      y: Number((normalizedX * 14).toFixed(2)),
+    });
+  };
+
+  return (
+    <div
+      className="dashboard-stage relative isolate min-h-full overflow-hidden"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={() => setTilt({ x: 0, y: 0 })}
+    >
+      <DashboardAmbientScene tilt={tilt} />
+      <div className="relative z-10">{content}</div>
+    </div>
+  );
+}
+
+function DashboardAmbientScene({ tilt }: { tilt: { x: number; y: number } }) {
+  const sceneStyle = {
+    "--dashboard-tilt-x": `${tilt.x}deg`,
+    "--dashboard-tilt-y": `${tilt.y}deg`,
+  } as CSSProperties;
+
+  return (
+    <div className="dashboard-ambient" aria-hidden="true">
+      <div className="dashboard-ambient__grid" />
+      <div className="dashboard-ambient__glow dashboard-ambient__glow--top" />
+      <div className="dashboard-ambient__glow dashboard-ambient__glow--bottom" />
+      <div className="dashboard-orb" style={sceneStyle}>
+        <div className="dashboard-orb__float">
+          <div className="dashboard-orb__spin">
+            <div className="dashboard-orb__core">
+              <span className="dashboard-orb__core-shine" />
+            </div>
+            <div className="dashboard-orb__ring dashboard-orb__ring--one" />
+            <div className="dashboard-orb__ring dashboard-orb__ring--two" />
+            <div className="dashboard-orb__ring dashboard-orb__ring--three" />
+            <span className="dashboard-orb__particle dashboard-orb__particle--one" />
+            <span className="dashboard-orb__particle dashboard-orb__particle--two" />
+            <span className="dashboard-orb__particle dashboard-orb__particle--three" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function SantriDashboard({
@@ -95,6 +158,14 @@ function SantriDashboard({
   errorMessage: string | null;
   isLoading: boolean;
 }) {
+  const navigate = useNavigate();
+  const quickActions = [
+    { icon: "activity" as const, label: "Kehadiran Saya", href: "/dashboard/kehadiran-saya" },
+    { icon: "shield" as const, label: "Kafarah Saya", href: "/dashboard/kafarah-saya" },
+    { icon: "book" as const, label: "Progress Keilmuan", href: "/dashboard/progress-keilmuan" },
+    { icon: "clock" as const, label: "Log Keluar/Masuk", href: "/dashboard/log-keluar-masuk/saya" },
+  ];
+
   if (isLoading) {
     return <SantriDashboardSkeleton user={user} />;
   }
@@ -109,7 +180,7 @@ function SantriDashboard({
         </div>
       ) : null}
 
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-6 shadow-sm">
+      <div className="dashboard-hero relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/90 via-white/75 to-slate-50/90 p-6 shadow-sm backdrop-blur-sm">
         <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-200/40 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-sky-200/30 blur-2xl" />
 
@@ -155,16 +226,12 @@ function SantriDashboard({
         </div>
 
         <div className="relative mt-5 flex flex-wrap gap-2">
-          {[
-            { icon: "activity" as const, label: "Kehadiran Saya" },
-            { icon: "shield" as const, label: "Kafarah Saya" },
-            { icon: "book" as const, label: "Progress Keilmuan" },
-            { icon: "clock" as const, label: "Log Keluar/Masuk" },
-          ].map((action) => (
+          {quickActions.map((action) => (
             <button
               key={action.label}
               type="button"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
+              onClick={() => navigate(action.href)}
+              className="dashboard-action inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:border-emerald-300 hover:text-emerald-700"
             >
               <AppIcon name={action.icon} className="h-4 w-4" />
               {action.label}
@@ -175,7 +242,7 @@ function SantriDashboard({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {view.metrics.map((metric) => (
-          <article key={metric.label} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <article key={metric.label} className="dashboard-card rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
             <p className="text-xs font-medium text-gray-500">{metric.label}</p>
             <p className="mt-2 text-2xl font-semibold text-gray-900">{metric.value}</p>
             <p className={`mt-1 text-xs ${metricToneClass[metric.tone]}`}>{metric.hint}</p>
@@ -184,7 +251,7 @@ function SantriDashboard({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <PanelCard title="Presensi Kehadiran Saya" description="Ringkasan kehadiran dan catatan terbaru." actionLabel="Lihat semua">
+        <PanelCard title="Presensi Kehadiran Saya" description="Ringkasan kehadiran dan catatan terbaru." actionLabel="Lihat semua" actionHref="/dashboard/kehadiran-saya">
           <SummaryGrid items={view.attendanceSummary} accentIndex={4} accentTone="emerald" />
           <ProgressBar width={view.attendanceProgressWidth} tone="emerald" />
           <div className="mt-4 space-y-2">
@@ -195,7 +262,7 @@ function SantriDashboard({
                     <p className="truncate text-sm font-medium text-gray-900">{item.title}</p>
                     <p className="text-xs text-gray-500">{item.date}</p>
                   </div>
-                  <span className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getStatusTone(item.status)}`}>
+                  <span className={`whitespace-nowrap text-[11px] font-semibold ${getStatusTone(item.status)}`}>
                     {item.status}
                   </span>
                 </div>
@@ -206,7 +273,7 @@ function SantriDashboard({
           </div>
         </PanelCard>
 
-        <PanelCard title="Kafarah Saya" description="Pantau setoran dan tanggungan terkini." actionLabel="Lihat semua">
+        <PanelCard title="Kafarah Saya" description="Pantau setoran dan tanggungan terkini." actionLabel="Lihat semua" actionHref="/dashboard/kafarah-saya">
           <SummaryGrid items={view.kafarahSummary} accentIndex={2} accentTone="rose" />
           <ProgressBar width={view.kafarahProgressWidth} tone="emerald" />
           <p className="mt-2 text-xs text-gray-500">Progress penyelesaian kafarah: {view.kafarahProgressWidth}</p>
@@ -219,7 +286,7 @@ function SantriDashboard({
           </div>
         </PanelCard>
 
-        <PanelCard title="Log Progress Keilmuan" description="Update materi Al-Quran dan Al-Hadits terbaru." actionLabel="Lihat semua">
+        <PanelCard title="Log Progress Keilmuan" description="Update materi Al-Quran dan Al-Hadits terbaru." actionLabel="Lihat semua" actionHref="/dashboard/progress-keilmuan">
           <SummaryGrid items={view.progressSummary} accentIndex={4} accentTone="emerald" />
           <div className="mt-4 space-y-2">
             {view.progressItems.length > 0 ? (
@@ -230,7 +297,7 @@ function SantriDashboard({
           </div>
         </PanelCard>
 
-        <PanelCard title="Log Keluar/Masuk" description="Status izin keluar/masuk terbaru Anda." actionLabel="Lihat semua">
+        <PanelCard title="Log Keluar/Masuk" description="Status izin keluar/masuk terbaru Anda." actionLabel="Lihat semua" actionHref="/dashboard/log-keluar-masuk/saya">
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
               Tercatat: {view.recordedMovementCount}
@@ -257,7 +324,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
     <div className="relative h-full min-h-0">
       <div ref={scrollRef} className="sidebar-scroll h-full overflow-y-auto pr-1 scroll-smooth">
         <div className="space-y-4 pb-8">
-          <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-6 shadow-sm">
+          <div className="dashboard-hero relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/90 via-white/75 to-cyan-50/90 p-6 shadow-sm backdrop-blur-sm">
             <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-200/40 blur-2xl" />
             <div className="pointer-events-none absolute -left-8 -bottom-8 h-28 w-28 rounded-full bg-cyan-200/40 blur-2xl" />
             <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -299,7 +366,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {view.metrics.map((metric) => (
-              <article key={metric.label} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <article key={metric.label} className="dashboard-card rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                 <p className="text-xs font-medium text-gray-500">{metric.label}</p>
                 <p className="mt-2 text-2xl font-semibold text-gray-900">{metric.value}</p>
                 <p className={`mt-1 text-xs ${metricToneClass[metric.tone]}`}>{metric.hint}</p>
@@ -312,6 +379,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
               title="Rekap Kehadiran Santri"
               description="Ringkasan status kehadiran seluruh data presensi."
               actionLabel="Lihat detail"
+              actionHref="/dashboard/staff/kehadiran-santri"
             >
               <SummaryGrid items={view.attendanceSummary} accentIndex={4} accentTone="emerald" />
               <ProgressBar width={view.attendanceProgressWidth} tone="emerald" />
@@ -322,6 +390,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
               title="Pencapaian Progress Santri"
               description="Peringkat rata-rata progres keilmuan per santri."
               actionLabel="Lihat detail"
+              actionHref="/dashboard/staff/progress-keilmuan"
             >
               <div className="mt-4 space-y-2">
                 {view.progressLeaders.length > 0 ? (
@@ -348,6 +417,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
             title="Log Terbaru Keluar/Masuk"
             description="Catatan terbaru aktivitas keluar/masuk seluruh santri."
             actionLabel="Lihat detail"
+            actionHref="/dashboard/staff/log-keluar-masuk"
           >
             <div className="mt-4 space-y-2">
               {view.recentLogs.length > 0 ? (
@@ -400,7 +470,7 @@ function StandardRoleDashboard({ user }: { user: AuthUser }) {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-slate-50 p-6 shadow-sm">
+      <div className="dashboard-hero relative overflow-hidden rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/90 via-white/75 to-slate-50/90 p-6 shadow-sm backdrop-blur-sm">
         <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-200/40 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-36 w-36 rounded-full bg-sky-200/30 blur-2xl" />
         <div className="relative flex flex-wrap items-start justify-between gap-5">
@@ -428,7 +498,7 @@ function StandardRoleDashboard({ user }: { user: AuthUser }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {preset.metrics.map((metric) => (
-          <article key={metric.label} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <article key={metric.label} className="dashboard-card rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
             <p className="text-xs font-medium text-gray-500">{metric.label}</p>
             <p className="mt-2 text-2xl font-semibold text-gray-900">{metric.value}</p>
             <p className={`mt-1 text-xs ${metricToneClass[metric.tone]}`}>{metric.hint}</p>
@@ -513,21 +583,30 @@ function PanelCard({
   title,
   description,
   actionLabel,
+  actionHref,
   children,
 }: {
   title: string;
   description: string;
   actionLabel: string;
+  actionHref?: string;
   children: ReactNode;
 }) {
+  const navigate = useNavigate();
+
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+    <article className="dashboard-card rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
           <p className="text-sm text-gray-500">{description}</p>
         </div>
-        <button type="button" className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+        <button
+          type="button"
+          onClick={actionHref ? () => navigate(actionHref) : undefined}
+          className={`text-xs font-semibold text-emerald-700 hover:text-emerald-800 ${actionHref ? "" : "cursor-default opacity-60"}`}
+          aria-disabled={!actionHref}
+        >
           {actionLabel}
         </button>
       </div>
@@ -799,15 +878,15 @@ function formatAttendanceStatus(status: string): string {
 function getStatusTone(status: string): string {
   switch (status) {
     case "Hadir":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "text-emerald-700";
     case "Izin":
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "text-amber-700";
     case "Sakit":
-      return "border-sky-200 bg-sky-50 text-sky-700";
+      return "text-sky-700";
     case "Alpa":
-      return "border-rose-200 bg-rose-50 text-rose-700";
+      return "text-rose-700";
     default:
-      return "border-gray-200 bg-gray-50 text-gray-700";
+      return "text-gray-700";
   }
 }
 
