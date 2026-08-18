@@ -255,7 +255,7 @@ function SantriDashboard({
                     <p className="truncate text-sm font-medium text-gray-900">{item.title}</p>
                     <p className="text-xs text-gray-500">{item.date}</p>
                   </div>
-                  <span className={`whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-semibold ${getStatusTone(item.status)}`}>
+                  <span className={`whitespace-nowrap text-[11px] font-semibold ${getStatusTone(item.status)}`}>
                     {item.status}
                   </span>
                 </div>
@@ -871,15 +871,15 @@ function formatAttendanceStatus(status: string): string {
 function getStatusTone(status: string): string {
   switch (status) {
     case "Hadir":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "text-emerald-700";
     case "Izin":
-      return "border-amber-200 bg-amber-50 text-amber-700";
+      return "text-amber-700";
     case "Sakit":
-      return "border-sky-200 bg-sky-50 text-sky-700";
+      return "text-sky-700";
     case "Alpa":
-      return "border-rose-200 bg-rose-50 text-rose-700";
+      return "text-rose-700";
     default:
-      return "border-gray-200 bg-gray-50 text-gray-700";
+      return "text-gray-700";
   }
 }
 
