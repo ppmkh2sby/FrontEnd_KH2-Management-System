@@ -78,6 +78,11 @@ export async function fetchSantriList(accessToken: string) {
   return http<SantriListResponse>("/api/v1/santri?page=1&perPage=200", { accessToken });
 }
 
+export async function fetchPublicSantriTotal(signal?: AbortSignal) {
+  const response = await http<SantriListResponse>("/api/v1/santri?page=1&perPage=1", { signal });
+  return response.totalCount;
+}
+
 export async function fetchPresensiList(accessToken: string) {
   return http<PresensiListResponse>("/api/v1/presensi?page=1&perPage=500", { accessToken });
 }
