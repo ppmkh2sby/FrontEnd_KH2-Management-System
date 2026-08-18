@@ -14,14 +14,6 @@ const featureShowcase = [
   },
   {
     number: "02",
-    label: "Dashboard Santri",
-    title: "Satu ringkasan untuk perkembangan santri.",
-    description: "Kehadiran, kafarah, progress keilmuan, dan aktivitas santri dirangkum dalam dashboard yang informatif.",
-    image: "/assets/images/landing/fitur/Dashboard%20Santri.png",
-    alt: "Tampilan dashboard santri KH2",
-  },
-  {
-    number: "03",
     label: "Dashboard Wali",
     title: "Perkembangan anak dalam satu pandangan.",
     description: "Akun wali terhubung langsung dengan data anak untuk memantau kehadiran, progress keilmuan, dan aktivitas harian.",
@@ -29,7 +21,7 @@ const featureShowcase = [
     alt: "Tampilan dashboard wali KH2",
   },
   {
-    number: "04",
+    number: "03",
     label: "Fitur Tim",
     title: "Rekap tim yang siap digunakan.",
     description: "Pantau rekap presensi tim dengan filter yang jelas untuk membantu pengurus mengambil keputusan lebih cepat.",
@@ -39,10 +31,9 @@ const featureShowcase = [
 ] as const;
 
 const featureImagePositions = [
-  "left-0 top-3 w-[86%] -rotate-[4deg]",
-  "right-0 top-16 w-[78%] rotate-[4deg]",
-  "left-5 bottom-8 w-[76%] -rotate-[2deg]",
-  "right-6 bottom-0 w-[72%] rotate-[2deg]",
+  "left-0 top-3 w-[88%] -rotate-[4deg]",
+  "right-0 top-24 w-[82%] rotate-[4deg]",
+  "left-8 bottom-0 w-[78%] -rotate-[2deg]",
 ] as const;
 
 const aboutPillars = [
