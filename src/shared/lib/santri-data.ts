@@ -79,7 +79,7 @@ export async function fetchSantriList(accessToken: string) {
 }
 
 export async function fetchPublicSantriTotal(signal?: AbortSignal) {
-  const response = await http<SantriListResponse>("/api/v1/santri?page=1&perPage=1", { signal });
+  const response = await http<{ totalCount: number }>("/api/v1/public/santri-total", { signal });
   return response.totalCount;
 }
 
