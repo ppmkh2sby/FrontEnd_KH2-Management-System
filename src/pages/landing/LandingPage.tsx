@@ -22,6 +22,14 @@ const featureShowcase = [
   },
   {
     number: "03",
+    label: "Dashboard Wali",
+    title: "Perkembangan anak dalam satu pandangan.",
+    description: "Akun wali terhubung langsung dengan data anak untuk memantau kehadiran, progress keilmuan, dan aktivitas harian.",
+    image: "/assets/images/landing/fitur/Dashboard%20Wali.png",
+    alt: "Tampilan dashboard wali KH2",
+  },
+  {
+    number: "04",
     label: "Fitur Tim",
     title: "Rekap tim yang siap digunakan.",
     description: "Pantau rekap presensi tim dengan filter yang jelas untuk membantu pengurus mengambil keputusan lebih cepat.",
@@ -31,9 +39,10 @@ const featureShowcase = [
 ] as const;
 
 const featureImagePositions = [
-  "left-0 top-3 w-[88%] -rotate-[4deg]",
-  "right-0 top-24 w-[82%] rotate-[4deg]",
-  "left-8 bottom-0 w-[78%] -rotate-[2deg]",
+  "left-0 top-3 w-[86%] -rotate-[4deg]",
+  "right-0 top-16 w-[78%] rotate-[4deg]",
+  "left-5 bottom-8 w-[76%] -rotate-[2deg]",
+  "right-6 bottom-0 w-[72%] rotate-[2deg]",
 ] as const;
 
 const aboutPillars = [
@@ -164,7 +173,7 @@ export function LandingPage() {
             <Link to="/login" className="text-sm font-bold text-emerald-700 transition hover:text-forest-950">Masuk ke sistem <span aria-hidden="true">→</span></Link>
           </div>
           <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1.08fr)_minmax(20rem,0.92fr)] lg:items-center lg:gap-16">
-            <div className="relative min-h-[25rem] sm:min-h-[32rem]" aria-label="Preview fitur utama KH2">
+            <div className="relative min-h-[27rem] sm:min-h-[34rem]" aria-label="Preview fitur utama KH2">
               <div className="absolute inset-x-8 top-10 h-64 rounded-full bg-emerald-200/35 blur-3xl sm:inset-x-16 sm:h-80" />
               <div className="absolute inset-x-8 bottom-6 h-16 rounded-full bg-forest-900/10 blur-2xl sm:inset-x-20" />
 
@@ -201,7 +210,7 @@ export function LandingPage() {
 
             <div className="relative">
               <div className="mb-8 max-w-md">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">{selectedFeature.number} / 03</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">{selectedFeature.number} / {featureShowcase.length.toString().padStart(2, "0")}</p>
                 <h3 className="mt-5 font-display text-[clamp(2rem,3.4vw,3.25rem)] leading-[1.02] tracking-[-0.05em] text-forest-950">
                   {selectedFeature.title}
                 </h3>
