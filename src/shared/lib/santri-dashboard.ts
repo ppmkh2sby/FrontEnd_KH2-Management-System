@@ -10,7 +10,7 @@ export function useSantriDashboard(user: AuthUser | null, token: string | null) 
   const [isSantriDashboardLoading, setIsSantriDashboardLoading] = useState(false);
 
   useEffect(() => {
-    if (!user || !token || user.role !== "Santri") {
+    if (!user || !token || !["Santri", "WaliSantri"].includes(user.role)) {
       setSantriDashboard(null);
       setSantriDashboardError(null);
       setIsSantriDashboardLoading(false);

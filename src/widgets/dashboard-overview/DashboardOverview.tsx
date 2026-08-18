@@ -78,7 +78,14 @@ export function DashboardOverview({
   } else if (user.role === "DewanGuru" || user.role === "Pengurus") {
     content = <StaffDashboard user={user} />;
   } else if (user.role === "WaliSantri") {
-    content = <WaliOverviewView user={user} />;
+    content = (
+      <WaliOverviewView
+        user={user}
+        dashboard={santriDashboard ?? null}
+        errorMessage={santriDashboardError ?? null}
+        isLoading={Boolean(isSantriDashboardLoading)}
+      />
+    );
   } else {
     content = <StandardRoleDashboard user={user} />;
   }
