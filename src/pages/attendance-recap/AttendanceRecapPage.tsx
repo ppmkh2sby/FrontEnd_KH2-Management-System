@@ -124,7 +124,7 @@ function AttendanceRecapContent() {
                       setActiveTab(option.key as "putra" | "putri");
                       setPage(1);
                     }}
-                    className={`inline-flex min-w-[58px] items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex min-w-14.5 items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
                       activeTab === option.key ? "bg-emerald-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"
                     }`}
                   >
@@ -200,7 +200,7 @@ function AttendanceRecapContent() {
           </div>
         </aside>
 
-        <section className="min-h-[420px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:flex md:h-full md:min-h-0 md:flex-col">
+        <section className="min-h-105 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:flex md:h-full md:min-h-0 md:flex-col">
           <div className="border-b border-gray-200 px-4 py-2.5">
             <h3 className="text-sm font-semibold text-gray-900">Detail Data Rekap {activeTab === "putri" ? "Putri" : "Putra"}</h3>
           </div>

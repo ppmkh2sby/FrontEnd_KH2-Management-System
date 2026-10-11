@@ -82,7 +82,7 @@ export function AppShell({
         {isSidebarOpen ? (
           <button
             type="button"
-            className="fixed inset-0 z-[60] bg-slate-900/40 lg:hidden"
+            className="fixed inset-0 z-60 bg-slate-900/40 lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
             aria-label="Tutup menu"
           />
@@ -90,7 +90,7 @@ export function AppShell({
 
         <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside
-            className={`fixed bottom-2 left-2 top-2 z-[70] flex w-[min(88vw,320px)] flex-col overflow-hidden rounded-[1.25rem] border border-gray-100 bg-white shadow-lg transition-transform duration-300 lg:fixed lg:bottom-5 lg:left-5 lg:top-5 lg:z-auto lg:h-[calc(100vh-40px)] lg:w-[280px] lg:min-w-[280px] lg:translate-x-0 lg:rounded-[1.5rem] ${
+            className={`fixed bottom-2 left-2 top-2 z-70 flex w-[min(88vw,320px)] flex-col overflow-hidden rounded-[1.25rem] border border-gray-100 bg-white shadow-lg transition-transform duration-300 lg:fixed lg:bottom-5 lg:left-5 lg:top-5 lg:z-auto lg:h-[calc(100vh-40px)] lg:w-70 lg:min-w-70 lg:translate-x-0 lg:rounded-3xl ${
               isSidebarOpen ? "translate-x-0" : "-translate-x-[120%] lg:translate-x-0"
             }`}
           >
@@ -110,7 +110,7 @@ export function AppShell({
 
           <section className="min-w-0 lg:col-start-2">
             <div
-              className={`rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-lg lg:rounded-[1.5rem] lg:p-5 ${contentPanelClassName ?? ""}`}
+              className={`rounded-3xl border border-gray-100 bg-white p-4 shadow-lg lg:rounded-3xl lg:p-5 ${contentPanelClassName ?? ""}`}
             >
               {children}
             </div>

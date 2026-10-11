@@ -272,7 +272,7 @@ function AttendanceTeamContent() {
                       setFilters((current) => ({ ...current, gender: option.key as TeamAttendanceFilters["gender"] }));
                       setCurrentPage(1);
                     }}
-                    className={`inline-flex min-w-[66px] items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex min-w-16.5 items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                       filters.gender === option.key
                         ? "bg-emerald-600 text-white shadow-sm"
                         : "text-gray-700 hover:bg-white"
@@ -331,14 +331,14 @@ function AttendanceTeamContent() {
           <div className="overflow-x-auto">
             <table className="w-full table-fixed text-sm">
               <colgroup>
-                <col className="w-[220px]" />
-                <col className="w-[90px]" />
-                <col className="w-[140px]" />
-                <col className="w-[120px]" />
-                <col className="w-[110px]" />
-                <col className="w-[120px]" />
-                <col className="w-[140px]" />
-                <col className="w-[92px]" />
+                <col className="w-55" />
+                <col className="w-22.5" />
+                <col className="w-35" />
+                <col className="w-30" />
+                <col className="w-27.5" />
+                <col className="w-30" />
+                <col className="w-35" />
+                <col className="w-23" />
               </colgroup>
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">

@@ -4,6 +4,8 @@ import {
   canUseLiveCamera,
   captureCameraFile,
   captureCameraFrame,
+  debugCameraOrientation,
+  determineCameraOrientation,
   getCameraErrorMessage,
   getLiveCameraUnavailableMessage,
   startUserCamera,
@@ -47,7 +49,17 @@ export function FaceEnrollmentCamera({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isStarting, setIsStarting] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [needsPortraitRotation, setNeedsPortraitRotation] = useState(false);
   const liveCameraSupported = canUseLiveCamera();
+
+  const updateCameraOrientation = () => {
+    const video = videoRef.current;
+    if (!video?.videoWidth || !video.videoHeight) return;
+
+    const orientation = determineCameraOrientation(video.videoWidth, video.videoHeight);
+    setNeedsPortraitRotation(orientation.needsPortraitRotation);
+    debugCameraOrientation(video.videoWidth, video.videoHeight, orientation);
+  };
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -62,6 +74,7 @@ export function FaceEnrollmentCamera({
 
       try {
         streamRef.current = await startUserCamera(videoRef.current);
+        updateCameraOrientation();
         setIsCameraActive(true);
       } catch (error) {
         setCameraError(error instanceof Error && !(error instanceof DOMException) ? error.message : getCameraErrorMessage(error));
@@ -78,6 +91,13 @@ export function FaceEnrollmentCamera({
       document.body.style.overflow = previousOverflow;
     };
   }, [liveCameraSupported]);
+
+  useEffect(() => {
+    if (!isCameraActive) return;
+
+    window.addEventListener("resize", updateCameraOrientation);
+    return () => window.removeEventListener("resize", updateCameraOrientation);
+  }, [isCameraActive]);
 
   const capture = async () => {
     if (!videoRef.current || !isCameraActive || isCapturing) return;
@@ -107,11 +127,19 @@ export function FaceEnrollmentCamera({
     : "border-white/90 shadow-[0_0_28px_rgba(255,255,255,0.18),0_0_0_9999px_rgba(0,0,0,0.3)]";
 
   return (
-    <div className="face-camera-enter fixed inset-0 z-[100] min-h-[100dvh] overflow-hidden bg-[#06140e] text-white">
-      <video ref={videoRef} className={`absolute inset-0 h-full w-full scale-x-[-1] object-cover transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`} playsInline muted />
+    <div className="face-camera-enter fixed inset-0 z-100 min-h-dvh overflow-hidden bg-[#06140e] text-white">
+      <video
+        ref={videoRef}
+        className={needsPortraitRotation
+          ? `absolute left-1/2 top-1/2 h-full w-auto max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 scale-x-[-1] transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`
+          : `absolute inset-0 h-full w-full scale-x-[-1] object-cover transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`}
+        onLoadedMetadata={updateCameraOrientation}
+        playsInline
+        muted
+      />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_15%,rgba(3,12,8,0.08)_50%,rgba(3,12,8,0.56)_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/65 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-black/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-linear-to-b from-black/65 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-linear-to-t from-black/70 to-transparent" />
 
       <header className="absolute inset-x-0 top-0 z-20 px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
         <div className="mx-auto flex max-w-md items-center justify-between">
@@ -140,7 +168,7 @@ export function FaceEnrollmentCamera({
         ) : (
           <div className="relative h-[min(62dvh,560px)] w-[min(80vw,360px)] sm:h-[min(54vh,520px)] sm:w-[min(74vw,370px)]">
             <div className={`absolute inset-0 rounded-[46%_46%_42%_42%/38%_38%_56%_56%] border-[3px] transition-all duration-500 ${guideTone}`} />
-            <div className="face-scan-line absolute left-[8%] right-[8%] top-[16%] h-px bg-gradient-to-r from-transparent via-emerald-200 to-transparent shadow-[0_0_12px_rgba(167,243,208,0.9)]" />
+            <div className="face-scan-line absolute left-[8%] right-[8%] top-[16%] h-px bg-linear-to-r from-transparent via-emerald-200 to-transparent shadow-[0_0_12px_rgba(167,243,208,0.9)]" />
             <PoseDirection pose={pose.key} />
             <span className="absolute -left-1 -top-1 h-8 w-8 rounded-tl-[1.75rem] border-l-4 border-t-4 border-emerald-300" />
             <span className="absolute -right-1 -top-1 h-8 w-8 rounded-tr-[1.75rem] border-r-4 border-t-4 border-emerald-300" />

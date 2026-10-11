@@ -1,9 +1,50 @@
 const maximumImageDimension = 1280;
 const maximumCameraFileBytes = 15 * 1024 * 1024;
+const portraitCorrectionDegrees = -90;
+
+export type CameraOrientation = {
+  viewportPortrait: boolean;
+  sourceLandscape: boolean;
+  needsPortraitRotation: boolean;
+  rotationDegrees: 0 | typeof portraitCorrectionDegrees;
+};
 
 function isMobilePortraitViewport(): boolean {
   return window.matchMedia("(max-width: 768px)").matches &&
     window.matchMedia("(orientation: portrait)").matches;
+}
+
+/**
+ * iOS in-app browsers can expose a front-camera portrait frame as landscape.
+ * A counter-clockwise quarter turn makes that sensor frame portrait again.
+ */
+export function determineCameraOrientation(
+  sourceWidth: number,
+  sourceHeight: number,
+  viewportPortrait = isMobilePortraitViewport(),
+): CameraOrientation {
+  const sourceLandscape = sourceWidth > sourceHeight;
+  const needsPortraitRotation = viewportPortrait && sourceLandscape;
+
+  return {
+    viewportPortrait,
+    sourceLandscape,
+    needsPortraitRotation,
+    rotationDegrees: needsPortraitRotation ? portraitCorrectionDegrees : 0,
+  };
+}
+
+export function debugCameraOrientation(sourceWidth: number, sourceHeight: number, orientation: CameraOrientation): void {
+  if (import.meta.env.DEV) {
+    console.debug("[face-camera] orientation", {
+      viewportWidth: window.innerWidth,
+      viewportHeight: window.innerHeight,
+      videoWidth: sourceWidth,
+      videoHeight: sourceHeight,
+      viewportPortrait: orientation.viewportPortrait,
+      needsPortraitRotation: orientation.needsPortraitRotation,
+    });
+  }
 }
 
 export function canUseLiveCamera(): boolean {
@@ -76,7 +117,14 @@ export function captureCameraFrame(video: HTMLVideoElement): string {
     throw new Error("Kamera belum siap. Tunggu sebentar lalu ambil foto kembali.");
   }
 
-  return renderCameraImage(video, video.videoWidth, video.videoHeight, isMobilePortraitViewport() ? 9 / 16 : undefined);
+  const orientation = determineCameraOrientation(video.videoWidth, video.videoHeight);
+  return renderCameraImage(
+    video,
+    video.videoWidth,
+    video.videoHeight,
+    orientation.viewportPortrait ? 9 / 16 : undefined,
+    orientation.rotationDegrees,
+  );
 }
 
 export async function captureCameraFile(file: File): Promise<string> {
@@ -105,7 +153,30 @@ export async function captureCameraFile(file: File): Promise<string> {
   }
 }
 
-function renderCameraImage(source: CanvasImageSource, sourceWidth: number, sourceHeight: number, targetRatio?: number): string {
+function renderCameraImage(
+  source: CanvasImageSource,
+  sourceWidth: number,
+  sourceHeight: number,
+  targetRatio?: number,
+  rotationDegrees: CameraOrientation["rotationDegrees"] = 0,
+): string {
+  if (rotationDegrees !== 0) {
+    const orientedCanvas = document.createElement("canvas");
+    orientedCanvas.width = sourceHeight;
+    orientedCanvas.height = sourceWidth;
+    const orientedContext = orientedCanvas.getContext("2d");
+
+    if (!orientedContext) {
+      throw new Error("Browser tidak dapat menyiapkan foto dari kamera.");
+    }
+
+    // Keep captures natural (unmirrored); only correct the sideways sensor frame.
+    orientedContext.translate(0, sourceWidth);
+    orientedContext.rotate((rotationDegrees * Math.PI) / 180);
+    orientedContext.drawImage(source, 0, 0, sourceWidth, sourceHeight);
+    return renderCameraImage(orientedCanvas, orientedCanvas.width, orientedCanvas.height, targetRatio);
+  }
+
   let cropWidth = sourceWidth;
   let cropHeight = sourceHeight;
 

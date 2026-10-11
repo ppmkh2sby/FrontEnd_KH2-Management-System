@@ -214,7 +214,7 @@ function KafarahCreateContent() {
           <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
             <div className="rounded-xl border border-gray-200 bg-white px-3 py-3 text-center">
               <p className="mb-1.5 text-xs font-medium text-gray-600">Santri Dipilih</p>
-              <p className="text-2xl font-semibold leading-[30px] text-gray-900">{selectedSantriIds.length}</p>
+              <p className="text-2xl font-semibold leading-7.5 text-gray-900">{selectedSantriIds.length}</p>
             </div>
 
             <div className="space-y-3.5">

@@ -261,13 +261,13 @@ function KafarahTeamContent() {
           <div className="min-h-0 flex-1 overflow-hidden">
             <table className="w-full table-fixed text-sm">
               <colgroup>
-                <col className="w-[220px]" />
-                <col className="w-[90px]" />
-                <col className="w-[140px]" />
-                <col className="w-[220px]" />
-                <col className="w-[220px]" />
-                <col className="w-[130px]" />
-                <col className="w-[92px]" />
+                <col className="w-55" />
+                <col className="w-22.5" />
+                <col className="w-35" />
+                <col className="w-55" />
+                <col className="w-55" />
+                <col className="w-32.5" />
+                <col className="w-23" />
               </colgroup>
               <thead className="sticky top-0 z-10">
                 <tr className="border-b border-gray-200 bg-gray-50">

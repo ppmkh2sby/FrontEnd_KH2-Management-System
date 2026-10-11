@@ -82,7 +82,7 @@ function FaceEnrollmentContent() {
 
   if (completion) {
     return (
-      <div className="relative mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#ecfdf5_0%,#dff7e8_55%,#cdebd9_100%)] px-5 py-12 text-forest-950">
+      <div className="relative mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center overflow-hidden rounded-4xl bg-[linear-gradient(145deg,#ecfdf5_0%,#dff7e8_55%,#cdebd9_100%)] px-5 py-12 text-forest-950">
         <section className="relative z-10 max-w-lg text-center">
           <div className="face-verified-pop mx-auto grid h-24 w-24 place-items-center rounded-full bg-emerald-600 text-white shadow-[0_24px_60px_-24px_rgba(5,150,105,0.8)]"><AppIcon name="check" className="h-12 w-12" /></div>
           <h1 className="mt-8 font-display text-4xl leading-tight tracking-[-0.04em] sm:text-5xl">
@@ -96,7 +96,7 @@ function FaceEnrollmentContent() {
 
   return (
     <>
-      <div className="relative mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#f7fbf8_0%,#edf7f1_48%,#e3f2e9_100%)] px-5 py-12 text-forest-950 sm:px-10">
+      <div className="relative mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center overflow-hidden rounded-4xl bg-[linear-gradient(145deg,#f7fbf8_0%,#edf7f1_48%,#e3f2e9_100%)] px-5 py-12 text-forest-950 sm:px-10">
         <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-forest-700/10 blur-3xl" />
         <section className="relative z-10 w-full max-w-xl text-center">
