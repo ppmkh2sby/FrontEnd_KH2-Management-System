@@ -8,3 +8,10 @@ export type FaceProfileEnrollmentResponse = {
   modelVersion: string;
   enrolledAtUtc: string;
 };
+
+export type FaceRecognitionResponse = {
+  isRecognized: boolean;
+  santriId: string | null;
+  similarity: number | null;
+  reason: string | null;
+};

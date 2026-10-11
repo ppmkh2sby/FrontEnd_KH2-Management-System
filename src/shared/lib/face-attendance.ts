@@ -1,5 +1,5 @@
 import { http } from "@/shared/lib/http";
-import type { FaceProfileEnrollmentResponse } from "@/shared/types/face-attendance";
+import type { FaceProfileEnrollmentResponse, FaceRecognitionResponse } from "@/shared/types/face-attendance";
 
 const enrollmentPath = "/api/v1/face-profiles/me/enrollment";
 const maximumPhotoBytes = 5 * 1024 * 1024;
@@ -17,6 +17,17 @@ export async function enrollCanonicalFaceProfile(accessToken: string, images: st
   const body = new FormData();
   photos.forEach((photo) => body.append("photos", photo));
   return http<FaceProfileEnrollmentResponse>(enrollmentPath, { method: "POST", accessToken, body });
+}
+
+export async function recognizeEnrolledFace(accessToken: string, imageData: string) {
+  const photo = await imageDataToFile(imageData, "uji-wajah.jpg");
+  if (photo.size === 0 || photo.size > maximumPhotoBytes) {
+    throw new Error("Ukuran foto tidak valid atau melebihi 5 MB. Ambil foto baru.");
+  }
+
+  const body = new FormData();
+  body.append("photo", photo);
+  return http<FaceRecognitionResponse>("/api/v1/face-recognition", { method: "POST", accessToken, body });
 }
 
 async function imageDataToFile(imageData: string, fileName: string): Promise<File> {

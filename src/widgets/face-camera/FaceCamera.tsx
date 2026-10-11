@@ -71,8 +71,8 @@ export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil fo
         <p className="mt-1 text-sm leading-6 text-gray-600">Kamera hanya digunakan untuk foto yang Anda kirim ke backend. Foto tidak disimpan di perangkat ini.</p>
       </div>
       <div className="p-5">
-        <div className="relative overflow-hidden rounded-xl bg-slate-950 aspect-video">
-          <video ref={videoRef} className={`h-full w-full object-cover ${isCameraActive ? "" : "hidden"}`} playsInline muted />
+        <div className="relative mx-auto aspect-9/16 w-[min(80vw,360px)] overflow-hidden rounded-xl bg-slate-950 md:aspect-video md:w-full">
+          <video ref={videoRef} className={`h-full w-full scale-x-[-1] object-cover ${isCameraActive ? "" : "hidden"}`} playsInline muted />
           {!isCameraActive ? (
             <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-200">
               <div>

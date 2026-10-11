@@ -43,6 +43,7 @@ const adminNavigation: DashboardNavItem[] = [
   { key: "dashboard", label: "Dashboard", caption: "Monitoring utama", icon: "dashboard" },
   { key: "santri", label: "Data Santri", caption: "Master data santri", icon: "users" },
   { key: "presensi", label: "Presensi", caption: "Rekap kehadiran", icon: "activity" },
+  { key: "uji-deteksi-wajah", label: "Uji Deteksi Wajah", caption: "Cek profil terdaftar", icon: "verify", href: "/dashboard/uji-deteksi-wajah" },
   { key: "kafarah", label: "Kafarah", caption: "Kontrol tanggungan", icon: "shield" },
   { key: "laporan", label: "Laporan", caption: "Ringkasan sistem", icon: "log" },
 ];
@@ -66,6 +67,7 @@ const dewanGuruNavigation: DashboardNavItem[] = [
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
   { key: "log-keluar-masuk", label: "Log Keluar/Masuk", caption: "Aktivitas santri", icon: "clock", href: "/dashboard/staff/log-keluar-masuk" },
+  { key: "uji-deteksi-wajah", label: "Uji Deteksi Wajah", caption: "Cek profil terdaftar", icon: "verify", href: "/dashboard/uji-deteksi-wajah" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
@@ -88,6 +90,7 @@ const pengurusNavigation: DashboardNavItem[] = [
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
   { key: "log-keluar-masuk", label: "Log Keluar/Masuk", caption: "Izin santri", icon: "clock", href: "/dashboard/staff/log-keluar-masuk" },
+  { key: "uji-deteksi-wajah", label: "Uji Deteksi Wajah", caption: "Cek profil terdaftar", icon: "verify", href: "/dashboard/uji-deteksi-wajah" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 

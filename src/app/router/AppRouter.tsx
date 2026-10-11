@@ -8,6 +8,7 @@ const AttendanceCreatePage = lazyPage(() => import("@/pages/attendance-create/At
 const AttendanceRecapPage = lazyPage(() => import("@/pages/attendance-recap/AttendanceRecapPage"), "AttendanceRecapPage");
 const AttendanceTeamPage = lazyPage(() => import("@/pages/attendance-team/AttendanceTeamPage"), "AttendanceTeamPage");
 const FaceEnrollmentPage = lazyPage(() => import("@/pages/face-enrollment/FaceEnrollmentPage"), "FaceEnrollmentPage");
+const FaceRecognitionTestPage = lazyPage(() => import("@/pages/face-recognition-test/FaceRecognitionTestPage"), "FaceRecognitionTestPage");
 const HomePage = lazyPage(() => import("@/pages/home/HomePage"), "HomePage");
 const KafarahCreatePage = lazyPage(() => import("@/pages/kafarah-create/KafarahCreatePage"), "KafarahCreatePage");
 const KafarahMinePage = lazyPage(() => import("@/pages/kafarah-mine/KafarahMinePage"), "KafarahMinePage");
@@ -193,6 +194,15 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <FaceEnrollmentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/uji-deteksi-wajah"
+        element={
+          <ProtectedRoute>
+            <FaceRecognitionTestPage />
           </ProtectedRoute>
         }
       />
