@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 
 import { useAuth } from "@/app/providers/AuthProvider";
 import { recognizeEnrolledFace } from "@/shared/lib/face-attendance";
+import { fetchSantriById } from "@/shared/lib/santri-data";
 import { ApiError } from "@/shared/lib/http";
 import type { FaceRecognitionResponse } from "@/shared/types/face-attendance";
 import { AppIcon } from "@/shared/ui/AppIcon";
@@ -20,6 +21,7 @@ function FaceRecognitionTestContent() {
   const { token } = useAuth();
   const [isBusy, setIsBusy] = useState(false);
   const [result, setResult] = useState<FaceRecognitionResponse | null>(null);
+  const [santriName, setSantriName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const requestInFlight = useRef(false);
 
@@ -28,10 +30,20 @@ function FaceRecognitionTestContent() {
     requestInFlight.current = true;
     setIsBusy(true);
     setResult(null);
+    setSantriName(null);
     setError(null);
 
     try {
-      setResult(await recognizeEnrolledFace(token, imageData));
+      const recognition = await recognizeEnrolledFace(token, imageData);
+      setResult(recognition);
+      if (recognition.isRecognized && recognition.santriId) {
+        try {
+          const santri = await fetchSantriById(token, recognition.santriId);
+          setSantriName(santri.nama);
+        } catch {
+          setSantriName("Nama Santri tidak dapat dimuat");
+        }
+      }
     } catch (recognitionError) {
       setError(toUserMessage(recognitionError));
     } finally {
@@ -55,7 +67,8 @@ function FaceRecognitionTestContent() {
         onCapture={recognize}
         isBusy={isBusy}
         captureLabel="Uji foto wajah"
-        guidance="Pastikan hanya satu wajah terlihat jelas. Hasil ditampilkan setelah foto dikirim ke server."
+        wideFraming
+        guidance="Jaga jarak sekitar satu lengan dari kamera agar wajah dan bahu terlihat. Pastikan hanya satu orang di dalam frame."
       />
 
       {error ? (
@@ -73,8 +86,8 @@ function FaceRecognitionTestContent() {
             <div>
               <h2 className="font-semibold text-gray-900">{result.isRecognized ? "Wajah terdaftar terdeteksi" : "Wajah belum dapat dikenali"}</h2>
               <p className="mt-1 text-sm leading-6 text-gray-700">{getResultDescription(result)}</p>
-              {result.isRecognized && result.santriId ? (
-                <p className="mt-3 text-xs text-gray-600">ID Santri: <code className="break-all font-mono">{result.santriId}</code></p>
+              {result.isRecognized ? (
+                <p className="mt-3 text-sm font-semibold text-gray-900">Nama Santri: {santriName ?? "Memuat nama..."}</p>
               ) : null}
               {result.isRecognized && typeof result.similarity === "number" ? (
                 <p className="mt-1 text-xs text-gray-600">Nilai kemiripan: {result.similarity.toFixed(3)}</p>

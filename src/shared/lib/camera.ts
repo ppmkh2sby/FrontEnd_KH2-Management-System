@@ -112,7 +112,7 @@ export async function startUserCamera(video: HTMLVideoElement): Promise<MediaStr
   return stream;
 }
 
-export function captureCameraFrame(video: HTMLVideoElement): string {
+export function captureCameraFrame(video: HTMLVideoElement, preserveFullFrame = false): string {
   if (!video.videoWidth || !video.videoHeight) {
     throw new Error("Kamera belum siap. Tunggu sebentar lalu ambil foto kembali.");
   }
@@ -122,7 +122,7 @@ export function captureCameraFrame(video: HTMLVideoElement): string {
     video,
     video.videoWidth,
     video.videoHeight,
-    orientation.viewportPortrait ? 9 / 16 : undefined,
+    !preserveFullFrame && orientation.viewportPortrait ? 9 / 16 : undefined,
     orientation.rotationDegrees,
   );
 }

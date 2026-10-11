@@ -7,6 +7,7 @@ const AttendancePage = lazyPage(() => import("@/pages/attendance/AttendancePage"
 const AttendanceCreatePage = lazyPage(() => import("@/pages/attendance-create/AttendanceCreatePage"), "AttendanceCreatePage");
 const AttendanceRecapPage = lazyPage(() => import("@/pages/attendance-recap/AttendanceRecapPage"), "AttendanceRecapPage");
 const AttendanceTeamPage = lazyPage(() => import("@/pages/attendance-team/AttendanceTeamPage"), "AttendanceTeamPage");
+const AttendanceSimulationPage = lazyPage(() => import("@/pages/attendance-simulation/AttendanceSimulationPage"), "AttendanceSimulationPage");
 const FaceEnrollmentPage = lazyPage(() => import("@/pages/face-enrollment/FaceEnrollmentPage"), "FaceEnrollmentPage");
 const FaceRecognitionTestPage = lazyPage(() => import("@/pages/face-recognition-test/FaceRecognitionTestPage"), "FaceRecognitionTestPage");
 const HomePage = lazyPage(() => import("@/pages/home/HomePage"), "HomePage");
@@ -194,6 +195,15 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <FaceEnrollmentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/simulasi-presensi"
+        element={
+          <ProtectedRoute>
+            <AttendanceSimulationPage />
           </ProtectedRoute>
         }
       />

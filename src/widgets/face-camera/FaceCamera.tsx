@@ -7,9 +7,13 @@ type FaceCameraProps = {
   isBusy?: boolean;
   captureLabel?: string;
   guidance?: string;
+  privacyNotice?: string;
+  busyLabel?: string;
+  wideFraming?: boolean;
+  title?: string;
 };
 
-export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil foto", guidance }: FaceCameraProps) {
+export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil foto", guidance, privacyNotice = "Kamera hanya digunakan untuk foto yang Anda kirim ke backend. Foto tidak disimpan di perangkat ini.", busyLabel = "Mengirim foto...", wideFraming = false, title = "Kamera verifikasi" }: FaceCameraProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -45,7 +49,7 @@ export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil fo
     if (!videoRef.current) return;
     try {
       setError(null);
-      await onCapture(captureCameraFrame(videoRef.current));
+      await onCapture(captureCameraFrame(videoRef.current, wideFraming));
     } catch (captureError) {
       setError(captureError instanceof Error ? captureError.message : "Foto belum dapat diambil. Coba kembali.");
     }
@@ -67,12 +71,12 @@ export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil fo
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="border-b border-gray-100 px-5 py-4">
-        <h2 className="text-base font-semibold text-gray-900">Kamera verifikasi</h2>
-        <p className="mt-1 text-sm leading-6 text-gray-600">Kamera hanya digunakan untuk foto yang Anda kirim ke backend. Foto tidak disimpan di perangkat ini.</p>
+        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+        <p className="mt-1 text-sm leading-6 text-gray-600">{privacyNotice}</p>
       </div>
       <div className="p-5">
         <div className="relative mx-auto aspect-9/16 w-[min(80vw,360px)] overflow-hidden rounded-xl bg-slate-950 md:aspect-video md:w-full">
-          <video ref={videoRef} className={`h-full w-full scale-x-[-1] object-cover ${isCameraActive ? "" : "hidden"}`} playsInline muted />
+          <video ref={videoRef} className={`h-full w-full scale-x-[-1] ${wideFraming ? "object-contain" : "object-cover"} ${isCameraActive ? "" : "hidden"}`} playsInline muted />
           {!isCameraActive ? (
             <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-200">
               <div>
@@ -81,13 +85,13 @@ export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil fo
               </div>
             </div>
           ) : null}
-          {isCameraActive ? <div className="pointer-events-none absolute inset-[12%_25%] rounded-[48%] border-2 border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.14)]" /> : null}
+          {isCameraActive ? <div className={`pointer-events-none absolute rounded-[48%] border-2 border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,0.14)] ${wideFraming ? "inset-[12%_14%] md:inset-[10%_32%]" : "inset-[12%_25%]"}`} /> : null}
         </div>
         {guidance ? <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">{guidance}</p> : null}
         {error ? <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
         <div className="mt-4 flex flex-wrap gap-3">
           {!isCameraActive && liveCameraSupported ? <button type="button" onClick={() => void startCamera()} disabled={isStarting} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:bg-emerald-300">{isStarting ? "Menghubungkan kamera..." : "Izinkan & aktifkan kamera"}</button> : null}
-          {isCameraActive ? <button type="button" onClick={() => void capture()} disabled={isBusy} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:bg-emerald-300">{isBusy ? "Mengirim foto..." : captureLabel}</button> : null}
+          {isCameraActive ? <button type="button" onClick={() => void capture()} disabled={isBusy} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:bg-emerald-300">{isBusy ? busyLabel : captureLabel}</button> : null}
           {isCameraActive ? <button type="button" onClick={stopCamera} disabled={isBusy} className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Matikan kamera</button> : null}
           {!isCameraActive ? <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isBusy} className="rounded-lg border border-emerald-300 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">Ambil foto dengan kamera perangkat</button> : null}
           <input ref={fileInputRef} type="file" accept="image/*" capture="user" className="sr-only" onChange={(event) => void captureFromDeviceCamera(event)} />

@@ -14,6 +14,7 @@ import type {
   ProgressCategoryCode,
   ProgressKeilmuanPageResponse,
   SantriListResponse,
+  SantriItem,
 } from "@/shared/types/santri-data";
 
 export const attendanceCategoryOptions: AttendanceCategoryCode[] = ["sambung", "asrama", "keakraban"];
@@ -76,6 +77,10 @@ export const kafarahMapping = {
 
 export async function fetchSantriList(accessToken: string) {
   return http<SantriListResponse>("/api/v1/santri?page=1&perPage=200", { accessToken });
+}
+
+export async function fetchSantriById(accessToken: string, id: string) {
+  return http<SantriItem>(`/api/v1/santri/${encodeURIComponent(id)}`, { accessToken });
 }
 
 export async function fetchPublicSantriTotal(signal?: AbortSignal) {
