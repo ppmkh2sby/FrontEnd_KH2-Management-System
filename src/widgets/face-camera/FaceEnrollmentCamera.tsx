@@ -138,7 +138,7 @@ export function FaceEnrollmentCamera({
             {!isStarting ? <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-5 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-forest-900">Gunakan kamera perangkat</button> : null}
           </div>
         ) : (
-          <div className="relative h-[min(54vh,520px)] w-[min(74vw,370px)]">
+          <div className="relative h-[min(62dvh,560px)] w-[min(80vw,360px)] sm:h-[min(54vh,520px)] sm:w-[min(74vw,370px)]">
             <div className={`absolute inset-0 rounded-[46%_46%_42%_42%/38%_38%_56%_56%] border-[3px] transition-all duration-500 ${guideTone}`} />
             <div className="face-scan-line absolute left-[8%] right-[8%] top-[16%] h-px bg-gradient-to-r from-transparent via-emerald-200 to-transparent shadow-[0_0_12px_rgba(167,243,208,0.9)]" />
             <PoseDirection pose={pose.key} />

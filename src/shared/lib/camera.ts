@@ -1,6 +1,11 @@
 const maximumImageDimension = 1280;
 const maximumCameraFileBytes = 15 * 1024 * 1024;
 
+function isMobilePortraitViewport(): boolean {
+  return window.matchMedia("(max-width: 768px)").matches &&
+    window.matchMedia("(orientation: portrait)").matches;
+}
+
 export function canUseLiveCamera(): boolean {
   const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
   return (window.isSecureContext || isLocalhost) && Boolean(navigator.mediaDevices?.getUserMedia);
@@ -46,7 +51,21 @@ export async function startUserCamera(video: HTMLVideoElement): Promise<MediaStr
     throw new Error(getLiveCameraUnavailableMessage());
   }
 
-  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  const videoConstraints: MediaTrackConstraints = isMobilePortraitViewport()
+    ? {
+        facingMode: "user",
+        width: { ideal: 720 },
+        height: { ideal: 1280 },
+        aspectRatio: { ideal: 9 / 16 },
+      }
+    : {
+        facingMode: "user",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        aspectRatio: { ideal: 16 / 9 },
+      };
+
+  const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
   video.srcObject = stream;
   await video.play();
   return stream;
@@ -57,7 +76,7 @@ export function captureCameraFrame(video: HTMLVideoElement): string {
     throw new Error("Kamera belum siap. Tunggu sebentar lalu ambil foto kembali.");
   }
 
-  return renderCameraImage(video, video.videoWidth, video.videoHeight);
+  return renderCameraImage(video, video.videoWidth, video.videoHeight, isMobilePortraitViewport() ? 9 / 16 : undefined);
 }
 
 export async function captureCameraFile(file: File): Promise<string> {
@@ -86,10 +105,23 @@ export async function captureCameraFile(file: File): Promise<string> {
   }
 }
 
-function renderCameraImage(source: CanvasImageSource, sourceWidth: number, sourceHeight: number): string {
-  const scale = Math.min(1, maximumImageDimension / Math.max(sourceWidth, sourceHeight));
-  const width = Math.max(1, Math.round(sourceWidth * scale));
-  const height = Math.max(1, Math.round(sourceHeight * scale));
+function renderCameraImage(source: CanvasImageSource, sourceWidth: number, sourceHeight: number, targetRatio?: number): string {
+  let cropWidth = sourceWidth;
+  let cropHeight = sourceHeight;
+
+  if (targetRatio) {
+    if (sourceWidth / sourceHeight > targetRatio) {
+      cropWidth = sourceHeight * targetRatio;
+    } else {
+      cropHeight = sourceWidth / targetRatio;
+    }
+  }
+
+  const sourceX = (sourceWidth - cropWidth) / 2;
+  const sourceY = (sourceHeight - cropHeight) / 2;
+  const scale = Math.min(1, maximumImageDimension / Math.max(cropWidth, cropHeight));
+  const width = Math.max(1, Math.round(cropWidth * scale));
+  const height = Math.max(1, Math.round(cropHeight * scale));
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -99,6 +131,6 @@ function renderCameraImage(source: CanvasImageSource, sourceWidth: number, sourc
     throw new Error("Browser tidak dapat menyiapkan foto dari kamera.");
   }
 
-  context.drawImage(source, 0, 0, width, height);
+  context.drawImage(source, sourceX, sourceY, cropWidth, cropHeight, 0, 0, width, height);
   return canvas.toDataURL("image/jpeg", 0.88);
 }
