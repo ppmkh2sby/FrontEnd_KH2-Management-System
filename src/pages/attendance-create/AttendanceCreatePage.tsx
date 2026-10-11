@@ -19,7 +19,7 @@ type GenderTab = "putra" | "putri";
 
 export function AttendanceCreatePage() {
   return (
-    <SantriPageShell contentPanelClassName="xl:h-[calc(100vh-40px)] xl:overflow-hidden">
+    <SantriPageShell allowedTeams={["KTB"]} contentPanelClassName="xl:h-[calc(100vh-40px)] xl:overflow-hidden">
       {() => <AttendanceCreateContent />}
     </SantriPageShell>
   );

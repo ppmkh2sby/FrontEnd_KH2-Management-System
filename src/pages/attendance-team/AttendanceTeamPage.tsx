@@ -49,7 +49,7 @@ const pageSize = 8;
 
 export function AttendanceTeamPage() {
   return (
-    <SantriPageShell>
+    <SantriPageShell allowedTeams={["KTB"]}>
       {() => <AttendanceTeamContent />}
     </SantriPageShell>
   );

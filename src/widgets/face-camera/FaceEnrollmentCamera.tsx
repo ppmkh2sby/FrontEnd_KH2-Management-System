@@ -22,9 +22,9 @@ type FaceEnrollmentCameraProps = {
   pose: EnrollmentPose;
   step: number;
   totalSteps: number;
-  verifiedCount: number;
-  isAnalyzing: boolean;
-  verifiedStep: number | null;
+  capturedCount: number;
+  isCapturing: boolean;
+  capturedStep: number | null;
   feedback: string | null;
   onCapture: (imageData: string) => void | Promise<void>;
   onClose: () => void;
@@ -34,9 +34,9 @@ export function FaceEnrollmentCamera({
   pose,
   step,
   totalSteps,
-  verifiedCount,
-  isAnalyzing,
-  verifiedStep,
+  capturedCount,
+  isCapturing,
+  capturedStep,
   feedback,
   onCapture,
   onClose,
@@ -80,41 +80,40 @@ export function FaceEnrollmentCamera({
   }, [liveCameraSupported]);
 
   const capture = async () => {
-    if (!videoRef.current || !isCameraActive || isAnalyzing) return;
+    if (!videoRef.current || !isCameraActive || isCapturing) return;
     setCameraError(null);
     try {
       await onCapture(captureCameraFrame(videoRef.current));
     } catch (error) {
-      setCameraError(error instanceof Error ? error.message : "Foto belum dapat dianalisis. Coba kembali.");
+      setCameraError(error instanceof Error ? error.message : "Foto belum dapat diambil. Coba kembali.");
     }
   };
 
   useEffect(() => {
-    if (!isCameraActive || isAnalyzing || verifiedStep !== null || cameraError) return;
+    if (!isCameraActive || isCapturing || capturedStep !== null || cameraError) return;
 
-    // Give the user enough time to follow the new direction. Failed poses retry
-    // more slowly so the face service remains comfortably below its rate limit.
+    // Give the user time to follow the next pose before taking a local photo.
     const timer = window.setTimeout(() => {
       void capture();
     }, feedback ? 3_800 : 2_200);
 
     return () => window.clearTimeout(timer);
-  }, [cameraError, feedback, isAnalyzing, isCameraActive, pose.key, verifiedStep]);
+  }, [cameraError, feedback, isCapturing, isCameraActive, pose.key, capturedStep]);
 
   const captureFromDevice = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file || isAnalyzing) return;
+    if (!file || isCapturing) return;
 
     setCameraError(null);
     try {
       await onCapture(await captureCameraFile(file));
     } catch (error) {
-      setCameraError(error instanceof Error ? error.message : "Foto belum dapat dianalisis. Coba kembali.");
+      setCameraError(error instanceof Error ? error.message : "Foto belum dapat diambil. Coba kembali.");
     }
   };
 
-  const guideTone = verifiedStep !== null
+  const guideTone = capturedStep !== null
     ? "border-emerald-300 shadow-[0_0_38px_rgba(52,211,153,0.42),0_0_0_9999px_rgba(0,0,0,0.2)]"
     : feedback
       ? "border-amber-300 shadow-[0_0_34px_rgba(252,211,77,0.32),0_0_0_9999px_rgba(0,0,0,0.32)]"
@@ -129,17 +128,17 @@ export function FaceEnrollmentCamera({
 
       <header className="absolute inset-x-0 top-0 z-20 px-5 pb-3 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
         <div className="mx-auto flex max-w-md items-center justify-between">
-          <button type="button" onClick={onClose} disabled={isAnalyzing} className="inline-flex h-9 w-9 items-center justify-center text-white/75 transition hover:text-white disabled:opacity-40" aria-label="Tutup kamera">
+          <button type="button" onClick={onClose} disabled={isCapturing} className="inline-flex h-9 w-9 items-center justify-center text-white/75 transition hover:text-white disabled:opacity-40" aria-label="Tutup kamera">
             <AppIcon name="x" className="h-5 w-5" />
           </button>
           <div className="text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Verifikasi wajah</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Mengumpulkan foto...</p>
             <p className="mt-1 text-sm font-semibold text-white">{step} / {totalSteps}</p>
           </div>
           <span className="w-9" aria-hidden="true" />
         </div>
-        <div className="mx-auto mt-3 flex max-w-xs gap-1" aria-label={`${verifiedCount} dari ${totalSteps} pose terverifikasi`}>
-          {Array.from({ length: totalSteps }, (_, index) => <span key={index} className={`h-1 flex-1 rounded-full transition-all duration-500 ${index < verifiedCount ? "bg-emerald-400" : index === step - 1 ? "bg-white" : "bg-white/25"}`} />)}
+        <div className="mx-auto mt-3 flex max-w-xs gap-1" aria-label={`${capturedCount} dari ${totalSteps} foto diambil`}>
+          {Array.from({ length: totalSteps }, (_, index) => <span key={index} className={`h-1 flex-1 rounded-full transition-all duration-500 ${index < capturedCount ? "bg-emerald-400" : index === step - 1 ? "bg-white" : "bg-white/25"}`} />)}
         </div>
       </header>
 
@@ -148,7 +147,7 @@ export function FaceEnrollmentCamera({
           <div className="z-10 max-w-sm rounded-3xl border border-white/10 bg-black/40 p-6 text-center backdrop-blur-xl">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-400/15 text-emerald-200"><CameraGlyph /></div>
             <h2 className="mt-4 text-lg font-semibold">{isStarting ? "Menyiapkan kamera..." : "Kamera belum aktif"}</h2>
-            <p className="mt-2 text-sm leading-6 text-white/65">{cameraError ?? "Izinkan akses kamera agar proses verifikasi dapat dimulai."}</p>
+            <p className="mt-2 text-sm leading-6 text-white/65">{cameraError ?? "Izinkan akses kamera untuk mengambil foto."}</p>
             {!isStarting ? <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-5 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-forest-900">Gunakan kamera perangkat</button> : null}
           </div>
         ) : (
@@ -164,18 +163,18 @@ export function FaceEnrollmentCamera({
         )}
       </main>
 
-      {verifiedStep !== null ? (
+      {capturedStep !== null ? (
         <div className="pointer-events-none absolute inset-x-0 top-[max(5.5rem,calc(env(safe-area-inset-top)+4.5rem))] z-30 flex justify-center px-5">
-          <span className="face-verified-pop inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-lg"><AppIcon name="check" className="h-4 w-4" /> {verifiedStep}/{totalSteps}</span>
+          <span className="face-verified-pop inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-lg"><AppIcon name="check" className="h-4 w-4" /> Foto diambil: {capturedStep}/{totalSteps}</span>
         </div>
       ) : null}
 
       <footer className="absolute inset-x-0 bottom-0 z-20 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
         <div className="mx-auto max-w-md text-center">
           <p className="text-lg font-semibold text-white">{pose.title}</p>
-          <p className="mt-1 text-xs text-white/70">{isAnalyzing ? "Memeriksa wajah..." : feedback ?? pose.instruction}</p>
-          <button type="button" onClick={() => void capture()} disabled={!isCameraActive || isAnalyzing || verifiedStep !== null} className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-200 transition hover:text-white disabled:opacity-50">
-            {isAnalyzing ? <Spinner /> : <ScanGlyph />}{isAnalyzing ? "Memeriksa" : "Ambil sekarang"}
+          <p className="mt-1 text-xs text-white/70">{isCapturing ? "Foto diambil" : feedback ?? pose.instruction}</p>
+          <button type="button" onClick={() => void capture()} disabled={!isCameraActive || isCapturing || capturedStep !== null} className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-200 transition hover:text-white disabled:opacity-50">
+            {isCapturing ? <Spinner /> : <ScanGlyph />}{isCapturing ? "Mengambil foto" : "Ambil sekarang"}
           </button>
         </div>
       </footer>

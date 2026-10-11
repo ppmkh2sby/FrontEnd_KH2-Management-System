@@ -1,4 +1,4 @@
-import { isKtbTeam } from "@/shared/lib/face-attendance";
+import { isSantriTeam } from "@/shared/lib/santri-team";
 import type { AppRole } from "@/shared/types/auth";
 import type { DashboardNavItem } from "@/shared/types/dashboard";
 
@@ -12,11 +12,7 @@ const santriNavigation: DashboardNavItem[] = [
     children: [
       { key: "kehadiran-saya", label: "Kehadiran Saya", caption: "", icon: "users", href: "/dashboard/kehadiran-saya" },
       { key: "daftarkan-wajah", label: "Daftarkan Wajah", caption: "", icon: "verify", href: "/dashboard/daftarkan-wajah" },
-      { key: "presensi-wajah-saya", label: "Presensi Wajah Saya", caption: "", icon: "activity", href: "/dashboard/presensi-wajah/saya" },
       { key: "kafarah-saya", label: "Kafarah Saya", caption: "", icon: "shield", href: "/dashboard/kafarah-saya" },
-      { key: "kehadiran-santri", label: "Kehadiran Santri", caption: "", icon: "users", badge: "KTB", href: "/dashboard/kehadiran-santri" },
-      { key: "rekap-presensi", label: "Rekap Presensi", caption: "", icon: "clock", badge: "KTB", href: "/dashboard/rekap-presensi" },
-      { key: "kafarah-santri", label: "Kafarah Santri", caption: "", icon: "shield", badge: "KTB", href: "/dashboard/kafarah-santri" },
     ],
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Capaian materi", icon: "book", href: "/dashboard/progress-keilmuan" },
@@ -33,11 +29,20 @@ const santriNavigation: DashboardNavItem[] = [
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
+const ktbNavigationChildren: DashboardNavItem[] = [
+  { key: "kehadiran-santri", label: "Kehadiran Santri", caption: "", icon: "users", badge: "KTB", href: "/dashboard/kehadiran-santri" },
+  { key: "rekap-presensi", label: "Rekap Presensi", caption: "", icon: "clock", badge: "KTB", href: "/dashboard/rekap-presensi" },
+  { key: "kafarah-santri", label: "Kafarah Santri", caption: "", icon: "shield", badge: "KTB", href: "/dashboard/kafarah-santri" },
+];
+
+const kbmNavigationChildren: DashboardNavItem[] = [
+  { key: "jurnal-keilmuan", label: "Jurnal Keilmuan", caption: "", icon: "book", badge: "KBM", href: "/dashboard/jurnal-keilmuan" },
+];
+
 const adminNavigation: DashboardNavItem[] = [
   { key: "dashboard", label: "Dashboard", caption: "Monitoring utama", icon: "dashboard" },
   { key: "santri", label: "Data Santri", caption: "Master data santri", icon: "users" },
   { key: "presensi", label: "Presensi", caption: "Rekap kehadiran", icon: "activity" },
-  { key: "presensi-wajah", label: "Presensi Wajah", caption: "Buka sesi presensi", icon: "verify", href: "/dashboard/presensi-wajah" },
   { key: "kafarah", label: "Kafarah", caption: "Kontrol tanggungan", icon: "shield" },
   { key: "laporan", label: "Laporan", caption: "Ringkasan sistem", icon: "log" },
 ];
@@ -57,12 +62,10 @@ const dewanGuruNavigation: DashboardNavItem[] = [
         icon: "users",
         href: "/dashboard/staff/kehadiran-santri",
       },
-      { key: "daftarkan-wajah", label: "Daftarkan Wajah", caption: "", icon: "verify", href: "/dashboard/daftarkan-wajah" },
     ],
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
   { key: "log-keluar-masuk", label: "Log Keluar/Masuk", caption: "Aktivitas santri", icon: "clock", href: "/dashboard/staff/log-keluar-masuk" },
-  { key: "presensi-wajah", label: "Presensi Wajah", caption: "Buka sesi presensi", icon: "verify", href: "/dashboard/presensi-wajah" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
@@ -85,7 +88,6 @@ const pengurusNavigation: DashboardNavItem[] = [
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Evaluasi capaian", icon: "book", href: "/dashboard/staff/progress-keilmuan" },
   { key: "log-keluar-masuk", label: "Log Keluar/Masuk", caption: "Izin santri", icon: "clock", href: "/dashboard/staff/log-keluar-masuk" },
-  { key: "presensi-wajah", label: "Presensi Wajah", caption: "Buka sesi presensi", icon: "verify", href: "/dashboard/presensi-wajah" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];
 
@@ -109,10 +111,21 @@ export function getDashboardNavigation(role: AppRole | string, santriTeam?: stri
       return waliNavigation;
     case "Santri":
     default:
-      if (!isKtbTeam(santriTeam)) return santriNavigation;
-      return santriNavigation.map((item) => item.key !== "data-santri" ? item : {
+      const dataSantriNavigation = isSantriTeam(santriTeam, "KTB") ? ktbNavigationChildren : [];
+      const navigation = dataSantriNavigation.length
+        ? santriNavigation.map((item) => item.key !== "data-santri" ? item : {
         ...item,
-        children: [...(item.children ?? []), { key: "presensi-wajah", label: "Buka Presensi Wajah", caption: "", icon: "verify", badge: "KTB", href: "/dashboard/presensi-wajah" }],
-      });
+        children: [...(item.children ?? []), ...dataSantriNavigation],
+      })
+        : santriNavigation;
+
+      if (!isSantriTeam(santriTeam, "KBM")) return navigation;
+
+      const progressIndex = navigation.findIndex((item) => item.key === "progress");
+      return [
+        ...navigation.slice(0, progressIndex + 1),
+        ...kbmNavigationChildren,
+        ...navigation.slice(progressIndex + 1),
+      ];
   }
 }

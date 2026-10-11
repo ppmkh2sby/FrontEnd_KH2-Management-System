@@ -7,13 +7,12 @@ const AttendancePage = lazyPage(() => import("@/pages/attendance/AttendancePage"
 const AttendanceCreatePage = lazyPage(() => import("@/pages/attendance-create/AttendanceCreatePage"), "AttendanceCreatePage");
 const AttendanceRecapPage = lazyPage(() => import("@/pages/attendance-recap/AttendanceRecapPage"), "AttendanceRecapPage");
 const AttendanceTeamPage = lazyPage(() => import("@/pages/attendance-team/AttendanceTeamPage"), "AttendanceTeamPage");
-const FaceCheckInPage = lazyPage(() => import("@/pages/face-check-in/FaceCheckInPage"), "FaceCheckInPage");
 const FaceEnrollmentPage = lazyPage(() => import("@/pages/face-enrollment/FaceEnrollmentPage"), "FaceEnrollmentPage");
-const FaceSessionPage = lazyPage(() => import("@/pages/face-session/FaceSessionPage"), "FaceSessionPage");
 const HomePage = lazyPage(() => import("@/pages/home/HomePage"), "HomePage");
 const KafarahCreatePage = lazyPage(() => import("@/pages/kafarah-create/KafarahCreatePage"), "KafarahCreatePage");
 const KafarahMinePage = lazyPage(() => import("@/pages/kafarah-mine/KafarahMinePage"), "KafarahMinePage");
 const KafarahTeamPage = lazyPage(() => import("@/pages/kafarah-team/KafarahTeamPage"), "KafarahTeamPage");
+const JurnalKeilmuanPage = lazyPage(() => import("@/pages/jurnal-keilmuan/JurnalKeilmuanPage"), "JurnalKeilmuanPage");
 const LogInputPage = lazyPage(() => import("@/pages/log-input/LogInputPage"), "LogInputPage");
 const LogMinePage = lazyPage(() => import("@/pages/log-mine/LogMinePage"), "LogMinePage");
 const LoginPage = lazyPage(() => import("@/pages/login/LoginPage"), "LoginPage");
@@ -202,7 +201,7 @@ export function AppRouter() {
         path="/dashboard/presensi-wajah"
         element={
           <ProtectedRoute>
-            <FaceSessionPage />
+            <Navigate to="/dashboard" replace />
           </ProtectedRoute>
         }
       />
@@ -211,7 +210,7 @@ export function AppRouter() {
         path="/dashboard/presensi-wajah/saya"
         element={
           <ProtectedRoute>
-            <FaceCheckInPage />
+            <Navigate to="/dashboard" replace />
           </ProtectedRoute>
         }
       />
@@ -275,6 +274,15 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <ProgressPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/jurnal-keilmuan"
+        element={
+          <ProtectedRoute>
+            <JurnalKeilmuanPage />
           </ProtectedRoute>
         }
       />

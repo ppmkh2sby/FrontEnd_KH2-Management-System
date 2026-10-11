@@ -16,7 +16,7 @@ const pageSize = 100;
 
 export function AttendanceRecapPage() {
   return (
-    <SantriPageShell contentPanelClassName="h-[calc(100vh-40px)] overflow-y-auto md:overflow-hidden">
+    <SantriPageShell allowedTeams={["KTB"]} contentPanelClassName="h-[calc(100vh-40px)] overflow-y-auto md:overflow-hidden">
       {() => <AttendanceRecapContent />}
     </SantriPageShell>
   );

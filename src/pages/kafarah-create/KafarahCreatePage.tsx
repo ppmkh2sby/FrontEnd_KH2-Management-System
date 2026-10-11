@@ -12,7 +12,7 @@ type GenderTab = "putra" | "putri";
 
 export function KafarahCreatePage() {
   return (
-    <SantriPageShell>
+    <SantriPageShell allowedTeams={["KTB"]}>
       {() => <KafarahCreateContent />}
     </SantriPageShell>
   );

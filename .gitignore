@@ -8,3 +8,11 @@ Thumbs.db
 .env.azure
 .env.local
 .env.*.local
+
+# Local AI agent instructions and workspace metadata
+AGENTS.md
+**/AGENTS.md
+.codex/
+
+# Generated Graphify knowledge graph artifacts
+graphify-out/

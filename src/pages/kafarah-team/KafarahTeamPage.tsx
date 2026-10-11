@@ -36,7 +36,7 @@ const defaultPelanggaran = "tidak_sholat_subuh_di_masjid";
 
 export function KafarahTeamPage() {
   return (
-    <SantriPageShell contentPanelClassName="h-[calc(100vh-40px)] overflow-hidden">
+    <SantriPageShell allowedTeams={["KTB"]} contentPanelClassName="h-[calc(100vh-40px)] overflow-hidden">
       {() => <KafarahTeamContent />}
     </SantriPageShell>
   );
