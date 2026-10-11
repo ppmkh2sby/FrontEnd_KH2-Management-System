@@ -15,3 +15,18 @@ export type FaceRecognitionResponse = {
   similarity: number | null;
   reason: string | null;
 };
+
+export type SantriFaceVerificationResponse = {
+  verified: boolean;
+  similarity: number | null;
+  reason: string | null;
+};
+
+export type MyFaceEnrollmentStatus = {
+  isEnrolled: boolean;
+  status: string | null;
+  sampleCount: number;
+  modelName: string | null;
+  modelVersion: string | null;
+  enrolledAtUtc: string | null;
+};

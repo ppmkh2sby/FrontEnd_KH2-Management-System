@@ -1,8 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/app/providers/AuthProvider";
-import { enrollCanonicalFaceProfile } from "@/shared/lib/face-attendance";
+import { enrollCanonicalFaceProfile, fetchMyFaceEnrollment } from "@/shared/lib/face-attendance";
 import { ApiError } from "@/shared/lib/http";
 import { AppIcon } from "@/shared/ui/AppIcon";
 import { SantriPageShell } from "@/widgets/app-shell/SantriPageShell";
@@ -37,8 +37,29 @@ function FaceEnrollmentContent() {
   const [capturedStep, setCapturedStep] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [completion, setCompletion] = useState<"success" | "already-enrolled" | null>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [showEnrollmentFlow, setShowEnrollmentFlow] = useState(false);
   const captureLocked = useRef(false);
   const currentPose = poses[images.length];
+
+  useEffect(() => {
+    let active = true;
+    if (!token) {
+      setStatusError("Sesi login tidak tersedia. Silakan masuk kembali.");
+      setStatusLoading(false);
+      return;
+    }
+    void fetchMyFaceEnrollment(token).then((status) => {
+      if (active) setIsEnrolled(status.isEnrolled);
+    }).catch(() => {
+      if (active) setStatusError("Status pendaftaran wajah belum dapat dimuat. Coba buka kembali halaman ini.");
+    }).finally(() => {
+      if (active) setStatusLoading(false);
+    });
+    return () => { active = false; };
+  }, [token]);
 
   const takeCapture = async (imageData: string) => {
     if (captureLocked.current || images.length >= poses.length) return;
@@ -88,7 +109,29 @@ function FaceEnrollmentContent() {
           <h1 className="mt-8 font-display text-4xl leading-tight tracking-[-0.04em] sm:text-5xl">
             {completion === "success" ? "Wajah berhasil terdaftar." : "Wajah untuk akun ini sudah terdaftar."}
           </h1>
-          <button type="button" onClick={() => navigate("/dashboard")} className="mt-8 min-h-14 w-full max-w-sm rounded-2xl bg-forest-800 px-6 text-sm font-bold text-white shadow-lg transition hover:bg-forest-700">Kembali ke dashboard</button>
+          <div className="mx-auto mt-8 grid max-w-sm gap-3">
+            <button type="button" onClick={() => navigate("/dashboard/uji-wajah-saya")} className="min-h-14 rounded-2xl bg-forest-800 px-6 text-sm font-bold text-white shadow-lg transition hover:bg-forest-700">Uji Wajah Saya</button>
+            <button type="button" onClick={() => navigate("/dashboard")} className="min-h-12 rounded-2xl border border-forest-900/15 bg-white px-6 text-sm font-bold text-forest-900">Kembali ke dashboard</button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (statusLoading || statusError || (isEnrolled && !showEnrollmentFlow)) {
+    return (
+      <div className="mx-auto grid min-h-[calc(100vh-8rem)] max-w-5xl place-items-center rounded-4xl bg-emerald-50 px-5 py-12 text-forest-950">
+        <section className="max-w-lg text-center">
+          <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-white text-emerald-700 shadow-lg"><AppIcon name="verify" className="h-10 w-10" /></div>
+          <h1 className="mt-6 font-display text-4xl">{statusLoading ? "Memuat status wajah..." : statusError ? "Status belum tersedia" : "Wajah sudah terdaftar"}</h1>
+          <p className="mt-4 text-sm leading-7 text-forest-900/70">{statusError ?? (statusLoading ? "Memeriksa data wajah akun Anda." : "Data wajah aktif sudah tersimpan pada akun Anda. Anda dapat menguji kecocokan atau mendaftarkan ulang lima foto.")}</p>
+          {!statusLoading && !statusError ? (
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <button type="button" onClick={() => navigate("/dashboard/uji-wajah-saya")} className="min-h-12 rounded-xl bg-forest-800 px-5 text-sm font-bold text-white hover:bg-forest-700">Uji Wajah Saya</button>
+              <button type="button" onClick={() => setShowEnrollmentFlow(true)} className="min-h-12 rounded-xl border border-forest-900/20 bg-white px-5 text-sm font-bold text-forest-900 hover:bg-emerald-100">Daftarkan Ulang Wajah</button>
+            </div>
+          ) : null}
+          {statusError ? <button type="button" onClick={() => navigate("/dashboard")} className="mt-7 min-h-12 rounded-xl bg-forest-800 px-5 text-sm font-bold text-white">Kembali ke dashboard</button> : null}
         </section>
       </div>
     );

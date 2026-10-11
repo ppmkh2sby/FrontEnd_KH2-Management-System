@@ -200,13 +200,15 @@ export function AppRouter() {
       />
 
       <Route
-        path="/dashboard/simulasi-presensi"
+        path="/dashboard/uji-wajah-saya"
         element={
           <ProtectedRoute>
             <AttendanceSimulationPage />
           </ProtectedRoute>
         }
       />
+
+      <Route path="/dashboard/simulasi-presensi" element={<Navigate to="/dashboard/uji-wajah-saya" replace />} />
 
       <Route
         path="/dashboard/uji-deteksi-wajah"

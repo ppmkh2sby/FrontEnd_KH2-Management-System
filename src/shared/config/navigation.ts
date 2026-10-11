@@ -21,7 +21,7 @@ const santriNavigation: DashboardNavItem[] = [
     caption: "Alat uji dan layanan",
     icon: "activity",
     children: [
-      { key: "simulasi-presensi", label: "Uji Coba Presensi", caption: "Simulasi tanpa menyimpan", icon: "verify", href: "/dashboard/simulasi-presensi" },
+      { key: "uji-wajah-saya", label: "Uji Wajah Saya", caption: "Verifikasi wajah akun", icon: "verify", href: "/dashboard/uji-wajah-saya" },
     ],
   },
   { key: "progress", label: "Progress Keilmuan", caption: "Capaian materi", icon: "book", href: "/dashboard/progress-keilmuan" },
