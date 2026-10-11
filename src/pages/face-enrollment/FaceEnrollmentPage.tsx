@@ -119,7 +119,7 @@ function FaceEnrollmentContent() {
         </section>
       </div>
       {isScannerOpen && currentPose ? (
-        <FaceEnrollmentCamera pose={currentPose} step={images.length + 1} totalSteps={poses.length} capturedCount={images.length} isCapturing={capturedStep !== null} capturedStep={capturedStep} feedback={null} onCapture={takeCapture} onClose={() => setIsScannerOpen(false)} />
+        <FaceEnrollmentCamera pose={currentPose} step={images.length + 1} totalSteps={poses.length} capturedCount={images.length} isCapturing={capturedStep !== null} capturedStep={capturedStep} onCapture={takeCapture} onClose={() => setIsScannerOpen(false)} onReset={resetCaptures} />
       ) : null}
     </>
   );
@@ -127,9 +127,9 @@ function FaceEnrollmentContent() {
 
 function toUserMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.status === 400) return "Foto belum dapat diproses. Pastikan wajah terlihat jelas, pencahayaan cukup, lalu ambil ulang kelima foto.";
-    if (error.status === 403) return "Akun ini tidak memiliki akses untuk mendaftarkan wajah. Hubungi pengelola.";
-    if (error.status === 502) return "Layanan pengenalan wajah memberi respons yang tidak valid. Silakan coba kembali.";
+    if (error.status === 400) return "Foto belum dapat diproses. Pastikan hanya satu wajah terlihat jelas, pencahayaan cukup, lalu ambil ulang kelima foto.";
+    if (error.status === 403) return "Akun ini tidak memiliki akses untuk mendaftarkan wajah.";
+    if (error.status === 502) return "Layanan pengenalan wajah memberikan respons yang tidak valid. Silakan coba kembali.";
     if (error.status === 503 || error.status === 504) return "Layanan pengenalan wajah sedang tidak tersedia. Silakan coba kembali.";
     if (error.status === 0) return "Koneksi ke server terputus. Periksa jaringan dan coba kembali.";
     return "Pendaftaran wajah belum berhasil. Silakan coba kembali.";

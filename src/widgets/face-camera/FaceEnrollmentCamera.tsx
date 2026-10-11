@@ -25,9 +25,9 @@ type FaceEnrollmentCameraProps = {
   capturedCount: number;
   isCapturing: boolean;
   capturedStep: number | null;
-  feedback: string | null;
   onCapture: (imageData: string) => void | Promise<void>;
   onClose: () => void;
+  onReset: () => void;
 };
 
 export function FaceEnrollmentCamera({
@@ -37,9 +37,9 @@ export function FaceEnrollmentCamera({
   capturedCount,
   isCapturing,
   capturedStep,
-  feedback,
   onCapture,
   onClose,
+  onReset,
 }: FaceEnrollmentCameraProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -89,17 +89,6 @@ export function FaceEnrollmentCamera({
     }
   };
 
-  useEffect(() => {
-    if (!isCameraActive || isCapturing || capturedStep !== null || cameraError) return;
-
-    // Give the user time to follow the next pose before taking a local photo.
-    const timer = window.setTimeout(() => {
-      void capture();
-    }, feedback ? 3_800 : 2_200);
-
-    return () => window.clearTimeout(timer);
-  }, [cameraError, feedback, isCapturing, isCameraActive, pose.key, capturedStep]);
-
   const captureFromDevice = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -115,9 +104,7 @@ export function FaceEnrollmentCamera({
 
   const guideTone = capturedStep !== null
     ? "border-emerald-300 shadow-[0_0_38px_rgba(52,211,153,0.42),0_0_0_9999px_rgba(0,0,0,0.2)]"
-    : feedback
-      ? "border-amber-300 shadow-[0_0_34px_rgba(252,211,77,0.32),0_0_0_9999px_rgba(0,0,0,0.32)]"
-      : "border-white/90 shadow-[0_0_28px_rgba(255,255,255,0.18),0_0_0_9999px_rgba(0,0,0,0.3)]";
+    : "border-white/90 shadow-[0_0_28px_rgba(255,255,255,0.18),0_0_0_9999px_rgba(0,0,0,0.3)]";
 
   return (
     <div className="face-camera-enter fixed inset-0 z-[100] min-h-[100dvh] overflow-hidden bg-[#06140e] text-white">
@@ -135,7 +122,7 @@ export function FaceEnrollmentCamera({
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Mengumpulkan foto...</p>
             <p className="mt-1 text-sm font-semibold text-white">{step} / {totalSteps}</p>
           </div>
-          <span className="w-9" aria-hidden="true" />
+          <button type="button" onClick={onReset} disabled={isCapturing} className="text-xs font-semibold text-white/75 hover:text-white disabled:opacity-40">Ulangi</button>
         </div>
         <div className="mx-auto mt-3 flex max-w-xs gap-1" aria-label={`${capturedCount} dari ${totalSteps} foto diambil`}>
           {Array.from({ length: totalSteps }, (_, index) => <span key={index} className={`h-1 flex-1 rounded-full transition-all duration-500 ${index < capturedCount ? "bg-emerald-400" : index === step - 1 ? "bg-white" : "bg-white/25"}`} />)}
@@ -172,9 +159,9 @@ export function FaceEnrollmentCamera({
       <footer className="absolute inset-x-0 bottom-0 z-20 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
         <div className="mx-auto max-w-md text-center">
           <p className="text-lg font-semibold text-white">{pose.title}</p>
-          <p className="mt-1 text-xs text-white/70">{isCapturing ? "Foto diambil" : feedback ?? pose.instruction}</p>
+          <p className="mt-1 text-xs text-white/70">{isCapturing ? "Foto diambil" : pose.instruction}</p>
           <button type="button" onClick={() => void capture()} disabled={!isCameraActive || isCapturing || capturedStep !== null} className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-200 transition hover:text-white disabled:opacity-50">
-            {isCapturing ? <Spinner /> : <ScanGlyph />}{isCapturing ? "Mengambil foto" : "Ambil sekarang"}
+            {isCapturing ? <Spinner /> : <ScanGlyph />}{isCapturing ? "Mengambil foto" : "Ambil foto"}
           </button>
         </div>
       </footer>

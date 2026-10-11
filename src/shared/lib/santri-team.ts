@@ -1,16 +1,13 @@
 const teamAliases: Record<string, string> = {
-  ketertiban: "ktb",
-  timketertiban: "ktb",
-  timktb: "ktb",
-  timkbm: "kbm",
-  keilmuan: "kbm",
-  timkeilmuan: "kbm",
+  KETERTIBAN: "KTB",
+  TIMKETERTIBAN: "KTB",
+  TIMKTB: "KTB",
 };
 
 export function normalizeSantriTeam(team: string | null | undefined): string {
   const normalized = (team ?? "")
-    .toLocaleLowerCase("id-ID")
-    .replace(/[^a-z0-9]/g, "");
+    .replace(/[^\p{L}\p{N}]/gu, "")
+    .toUpperCase();
 
   return teamAliases[normalized] ?? normalized;
 }
