@@ -1,12 +1,10 @@
 const maximumImageDimension = 1280;
 const maximumCameraFileBytes = 15 * 1024 * 1024;
-const portraitCorrectionDegrees = -90;
-
 export type CameraOrientation = {
   viewportPortrait: boolean;
   sourceLandscape: boolean;
   needsPortraitRotation: boolean;
-  rotationDegrees: 0 | typeof portraitCorrectionDegrees;
+  rotationDegrees: 0;
 };
 
 function isMobilePortraitViewport(): boolean {
@@ -15,8 +13,9 @@ function isMobilePortraitViewport(): boolean {
 }
 
 /**
- * iOS in-app browsers can expose a front-camera portrait frame as landscape.
- * A counter-clockwise quarter turn makes that sensor frame portrait again.
+ * getUserMedia dimensions are capture metadata, not a reliable EXIF/orientation
+ * signal. Do not rotate a live stream merely because a portrait viewport received
+ * landscape pixels: modern browsers commonly expose that combination correctly.
  */
 export function determineCameraOrientation(
   sourceWidth: number,
@@ -24,13 +23,13 @@ export function determineCameraOrientation(
   viewportPortrait = isMobilePortraitViewport(),
 ): CameraOrientation {
   const sourceLandscape = sourceWidth > sourceHeight;
-  const needsPortraitRotation = viewportPortrait && sourceLandscape;
+  const needsPortraitRotation = false;
 
   return {
     viewportPortrait,
     sourceLandscape,
     needsPortraitRotation,
-    rotationDegrees: needsPortraitRotation ? portraitCorrectionDegrees : 0,
+    rotationDegrees: 0,
   };
 }
 
@@ -117,13 +116,11 @@ export function captureCameraFrame(video: HTMLVideoElement, preserveFullFrame = 
     throw new Error("Kamera belum siap. Tunggu sebentar lalu ambil foto kembali.");
   }
 
-  const orientation = determineCameraOrientation(video.videoWidth, video.videoHeight);
   return renderCameraImage(
     video,
     video.videoWidth,
     video.videoHeight,
-    !preserveFullFrame && orientation.viewportPortrait ? 9 / 16 : undefined,
-    orientation.rotationDegrees,
+    !preserveFullFrame && isMobilePortraitViewport() ? 9 / 16 : undefined,
   );
 }
 

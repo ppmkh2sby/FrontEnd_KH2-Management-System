@@ -49,7 +49,6 @@ export function FaceEnrollmentCamera({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isStarting, setIsStarting] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [needsPortraitRotation, setNeedsPortraitRotation] = useState(false);
   const liveCameraSupported = canUseLiveCamera();
 
   const updateCameraOrientation = () => {
@@ -57,7 +56,6 @@ export function FaceEnrollmentCamera({
     if (!video?.videoWidth || !video.videoHeight) return;
 
     const orientation = determineCameraOrientation(video.videoWidth, video.videoHeight);
-    setNeedsPortraitRotation(orientation.needsPortraitRotation);
     debugCameraOrientation(video.videoWidth, video.videoHeight, orientation);
   };
 
@@ -130,9 +128,7 @@ export function FaceEnrollmentCamera({
     <div className="face-camera-enter fixed inset-0 z-100 min-h-dvh overflow-hidden bg-[#06140e] text-white">
       <video
         ref={videoRef}
-        className={needsPortraitRotation
-          ? `absolute left-1/2 top-1/2 h-full w-auto max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 scale-x-[-1] transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`
-          : `absolute inset-0 h-full w-full scale-x-[-1] object-cover transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 h-full w-full scale-x-[-1] object-contain transition-opacity duration-500 ${isCameraActive ? "opacity-100" : "opacity-0"}`}
         onLoadedMetadata={updateCameraOrientation}
         playsInline
         muted

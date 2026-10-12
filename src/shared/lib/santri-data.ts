@@ -15,6 +15,7 @@ import type {
   ProgressKeilmuanPageResponse,
   SantriListResponse,
   SantriItem,
+  WaliChildrenResponse,
 } from "@/shared/types/santri-data";
 
 export const attendanceCategoryOptions: AttendanceCategoryCode[] = ["sambung", "asrama", "keakraban"];
@@ -83,13 +84,19 @@ export async function fetchSantriById(accessToken: string, id: string) {
   return http<SantriItem>(`/api/v1/santri/${encodeURIComponent(id)}`, { accessToken });
 }
 
+export async function fetchMyWaliChildren(accessToken: string) {
+  return http<WaliChildrenResponse>("/api/v1/wali/me/children", { accessToken });
+}
+
 export async function fetchPublicSantriTotal(signal?: AbortSignal) {
   const response = await http<{ totalCount: number }>("/api/v1/public/santri-total", { signal });
   return response.totalCount;
 }
 
-export async function fetchPresensiList(accessToken: string) {
-  return http<PresensiListResponse>("/api/v1/presensi?page=1&perPage=500", { accessToken });
+export async function fetchPresensiList(accessToken: string, santriId?: string) {
+  const params = new URLSearchParams({ page: "1", perPage: "500" });
+  if (santriId) params.set("santriId", santriId);
+  return http<PresensiListResponse>(`/api/v1/presensi?${params.toString()}`, { accessToken });
 }
 
 export async function storeBulkPresensi(
@@ -165,12 +172,16 @@ export async function fetchPresensiRecap(
   });
 }
 
-export async function fetchKafarahList(accessToken: string) {
-  return http<KafarahListResponse>("/api/v1/kafarah?page=1&perPage=200", { accessToken });
+export async function fetchKafarahList(accessToken: string, santriId?: string) {
+  const params = new URLSearchParams({ page: "1", perPage: "200" });
+  if (santriId) params.set("santriId", santriId);
+  return http<KafarahListResponse>(`/api/v1/kafarah?${params.toString()}`, { accessToken });
 }
 
-export async function fetchProgressKeilmuan(accessToken: string, category: ProgressCategoryCode) {
-  return http<ProgressKeilmuanPageResponse>(`/api/v1/progress-keilmuan?category=${encodeURIComponent(category)}`, {
+export async function fetchProgressKeilmuan(accessToken: string, category: ProgressCategoryCode, santriCode?: string) {
+  const params = new URLSearchParams({ category });
+  if (santriCode) params.set("santriCode", santriCode);
+  return http<ProgressKeilmuanPageResponse>(`/api/v1/progress-keilmuan?${params.toString()}`, {
     accessToken,
   });
 }
@@ -197,6 +208,7 @@ export async function fetchLogKeluarMasuk(
     scope?: "mine" | "team";
     search?: string;
     gender?: string;
+    santriId?: string;
   }
 ) {
   const params = new URLSearchParams({
@@ -214,6 +226,9 @@ export async function fetchLogKeluarMasuk(
 
   if (query.gender?.trim()) {
     params.set("gender", query.gender.trim());
+  }
+  if (query.santriId?.trim()) {
+    params.set("santriId", query.santriId);
   }
 
   return http<LogKeluarMasukListResponse>(`/api/v1/log-keluar-masuk?${params.toString()}`, {

@@ -25,7 +25,8 @@ export function AppShell({
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [manualActiveItemKey, setManualActiveItemKey] = useState(() => getInitialActiveKey(navigation));
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["data-santri"]));
+  const sidebarStateKey = `kh2-sidebar-expanded:${user.userId}:${user.role}`;
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => readExpandedItems(sidebarStateKey));
   const matchedRouteKey = findNavigationKeyByPath(navigation, location.pathname);
   const activeItemKey = matchedRouteKey ?? manualActiveItemKey;
 
@@ -42,6 +43,10 @@ export function AppShell({
       return next;
     });
   };
+
+  useEffect(() => {
+    window.sessionStorage.setItem(sidebarStateKey, JSON.stringify([...expandedItems]));
+  }, [expandedItems, sidebarStateKey]);
 
   useEffect(() => {
     if (!matchedRouteKey) {
@@ -99,6 +104,7 @@ export function AppShell({
               navigation={navigation}
               sidebarCaption={sidebarCaption}
               onLogout={onLogout}
+              sidebarStateKey={sidebarStateKey}
               onNavigate={() => setIsSidebarOpen(false)}
               expandedItems={expandedItems}
               activeItemKey={activeItemKey}
@@ -126,6 +132,7 @@ type SidebarContentProps = {
   navigation: DashboardNavItem[];
   sidebarCaption?: string;
   onLogout: () => Promise<void>;
+  sidebarStateKey: string;
   onNavigate: () => void;
   expandedItems: Set<string>;
   activeItemKey: string;
@@ -139,6 +146,7 @@ function SidebarContent({
   navigation,
   sidebarCaption,
   onLogout,
+  sidebarStateKey,
   onNavigate,
   expandedItems,
   activeItemKey,
@@ -167,16 +175,16 @@ function SidebarContent({
   // AppShell is recreated after a route change. Keep the menu at the same
   // position so selecting an item near the bottom does not jump it to the top.
   useLayoutEffect(() => {
-    const savedScrollTop = window.sessionStorage.getItem("kh2-sidebar-scroll-top");
+    const savedScrollTop = window.sessionStorage.getItem(`${sidebarStateKey}:scroll-top`);
 
     if (savedScrollTop && navigationRef.current) {
       navigationRef.current.scrollTop = Number(savedScrollTop);
     }
-  }, []);
+  }, [sidebarStateKey]);
 
   const saveNavigationScroll = () => {
     if (navigationRef.current) {
-      window.sessionStorage.setItem("kh2-sidebar-scroll-top", String(navigationRef.current.scrollTop));
+      window.sessionStorage.setItem(`${sidebarStateKey}:scroll-top`, String(navigationRef.current.scrollTop));
     }
   };
 
@@ -359,6 +367,18 @@ function SidebarContent({
       </div>
     </>
   );
+}
+
+function readExpandedItems(storageKey: string): Set<string> {
+  try {
+    const parsed: unknown = JSON.parse(window.sessionStorage.getItem(storageKey) ?? "[]");
+    if (Array.isArray(parsed) && parsed.every((value) => typeof value === "string")) {
+      return new Set(parsed);
+    }
+  } catch {
+    // fall through to the default menu state
+  }
+  return new Set(["data-santri"]);
 }
 
 function getInitialActiveKey(navigation: DashboardNavItem[]) {

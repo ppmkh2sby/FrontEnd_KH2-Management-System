@@ -107,6 +107,7 @@ const waliNavigation: DashboardNavItem[] = [
   { key: "dashboard", label: "Dashboard Anak", caption: "Ringkasan performa", icon: "dashboard", href: "/dashboard" },
   { key: "presensi", label: "Presensi", caption: "Kehadiran anak", icon: "activity", href: "/dashboard/wali/presensi" },
   { key: "progress", label: "Progress Keilmuan", caption: "Perkembangan materi", icon: "book", href: "/dashboard/wali/progress-keilmuan" },
+  { key: "kafarah", label: "Kafarah", caption: "Tanggungan anak", icon: "shield", href: "/dashboard/wali/kafarah" },
   { key: "movement", label: "Log Keluar/Masuk", caption: "Riwayat izin", icon: "clock", href: "/dashboard/wali/log-keluar-masuk" },
   { key: "notifikasi", label: "Notifikasi", caption: "", icon: "clock", badge: "10" },
 ];

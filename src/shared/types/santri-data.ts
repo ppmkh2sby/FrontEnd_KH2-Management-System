@@ -23,6 +23,17 @@ export type SantriListResponse = {
   totalCount: number;
 };
 
+export type WaliChild = {
+  santriId: string;
+  nis: string;
+  fullName: string;
+  tim: string;
+};
+
+export type WaliChildrenResponse = {
+  items: WaliChild[];
+};
+
 export type PresensiItem = {
   id: string;
   santriId: string;

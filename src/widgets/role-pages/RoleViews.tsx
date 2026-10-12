@@ -1,18 +1,46 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { AuthUser } from "@/shared/types/auth";
 import type { SantriDashboardResponse } from "@/shared/types/dashboard";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { fetchKafarahList, fetchLogKeluarMasuk, fetchMyWaliChildren, fetchPresensiList, fetchProgressKeilmuan, fetchSantriList } from "@/shared/lib/santri-data";
+import type { WaliChild } from "@/shared/types/santri-data";
 import { AppIcon } from "@/shared/ui/AppIcon";
 
-type WaliTabKey = "overview" | "presensi" | "progress" | "log";
+type WaliTabKey = "overview" | "presensi" | "progress" | "kafarah" | "log";
 
 const waliTabs: Array<{ key: WaliTabKey; label: string; href: string }> = [
   { key: "overview", label: "Overview", href: "/dashboard" },
   { key: "presensi", label: "Presensi", href: "/dashboard/wali/presensi" },
   { key: "progress", label: "Progress", href: "/dashboard/wali/progress-keilmuan" },
+  { key: "kafarah", label: "Kafarah", href: "/dashboard/wali/kafarah" },
   { key: "log", label: "Log Keluar/Masuk", href: "/dashboard/wali/log-keluar-masuk" },
 ];
+
+function useWaliSelectedChild() {
+  const { user, token } = useAuth();
+  const [children, setChildren] = useState<WaliChild[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const storageKey = user ? `kh2-wali-child:${user.userId}` : null;
+  useEffect(() => {
+    let active = true;
+    if (!token || !storageKey) return undefined;
+    const load = () => void fetchMyWaliChildren(token).then((response) => {
+      if (!active) return;
+      setChildren(response.items);
+      const saved = window.sessionStorage.getItem(storageKey);
+      setSelectedChildId(response.items.some((child) => child.santriId === saved) ? saved : response.items[0]?.santriId ?? null);
+    }).catch(() => { if (active) setError("Daftar anak belum dapat dimuat."); }).finally(() => { if (active) setIsLoading(false); });
+    load();
+    const handleChange = () => load();
+    window.addEventListener("kh2-wali-child-change", handleChange);
+    return () => { active = false; window.removeEventListener("kh2-wali-child-change", handleChange); };
+  }, [storageKey, token]);
+  return { child: children.find((item) => item.santriId === selectedChildId) ?? null, isLoading, error };
+}
 
 export function WaliChildNavigation({
   activeTab,
@@ -23,25 +51,58 @@ export function WaliChildNavigation({
   childName?: string;
   childNis?: string;
 }) {
+  const { user, token } = useAuth();
+  const [children, setChildren] = useState<WaliChild[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const storageKey = user ? `kh2-wali-child:${user.userId}` : null;
+
+  useEffect(() => {
+    let active = true;
+    if (!token || !storageKey) return undefined;
+
+    void fetchMyWaliChildren(token).then((response) => {
+      if (!active) return;
+      setChildren(response.items);
+      const saved = window.sessionStorage.getItem(storageKey);
+      const selected = response.items.some((child) => child.santriId === saved)
+        ? saved
+        : response.items[0]?.santriId ?? null;
+      setSelectedChildId(selected);
+      if (selected) window.sessionStorage.setItem(storageKey, selected);
+    }).catch(() => {
+      if (active) setError("Daftar anak belum dapat dimuat. Coba muat ulang halaman.");
+    }).finally(() => {
+      if (active) setIsLoading(false);
+    });
+    return () => { active = false; };
+  }, [storageKey, token]);
+
+  const selectedChild = children.find((child) => child.santriId === selectedChildId);
+  const displayedName = selectedChild?.fullName ?? childName;
+  const displayedNis = selectedChild?.nis ?? childNis;
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-emerald-600">Sedang dipantau</p>
-          <h2 className="text-2xl font-semibold text-gray-900">{childName ?? "Data anak belum tersedia"}</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">{isLoading ? "Memuat data anak..." : displayedName ?? "Belum ada anak terhubung"}</h2>
           <p className="mt-1 text-sm text-gray-500">
-            {childName ? `NIS ${childNis ?? "-"}` : "Hubungkan data santri saat backend role wali sudah siap."}
+            {error ?? (displayedName ? `NIS ${displayedNis ?? "-"}` : "Akun ini belum memiliki relasi Santri yang dapat dipantau.")}
           </p>
         </div>
 
-        <button
-          type="button"
-          disabled
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-400 sm:text-sm"
-        >
-          <AppIcon name="users" className="h-4 w-4" />
-          Profil Wali
-        </button>
+        {children.length > 1 ? (
+          <label className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 sm:text-sm">
+            <AppIcon name="users" className="h-4 w-4" />
+            <span className="sr-only">Pilih anak</span>
+            <select value={selectedChildId ?? ""} onChange={(event) => { setSelectedChildId(event.target.value); if (storageKey) window.sessionStorage.setItem(storageKey, event.target.value); window.dispatchEvent(new Event("kh2-wali-child-change")); }} className="bg-transparent outline-none">
+              {children.map((child) => <option key={child.santriId} value={child.santriId}>{child.fullName}</option>)}
+            </select>
+          </label>
+        ) : null}
       </div>
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1 text-sm whitespace-nowrap">
@@ -78,10 +139,10 @@ export function WaliOverviewView({
   errorMessage: string | null;
   isLoading: boolean;
 }) {
-  const child = dashboard?.profile;
-  const attendance = dashboard?.attendance;
-  const progress = dashboard?.progress;
-  const logs = dashboard?.logs;
+  // Never reuse the Santri /me dashboard for Wali. It is not a child-scoped
+  // contract and could display the wrong identity. The selector has its own
+  // relation endpoint; detailed child reads await the frozen BE query shape.
+  void dashboard;
 
   const featureCards = [
     {
@@ -116,24 +177,20 @@ export function WaliOverviewView({
 
   return (
     <div className="space-y-6">
-      <WaliChildNavigation activeTab="overview" childName={child?.fullName} childNis={child?.nis} />
+      <WaliChildNavigation activeTab="overview" />
 
       <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-6">
         <p className="text-sm text-emerald-600">Assalamualaikum, {user.fullName}</p>
         <h2 className="mt-1 text-2xl font-semibold text-gray-900">
-          {isLoading ? "Dashboard Anak: Menghubungkan data" : `Dashboard Anak: ${child?.fullName ?? "Data anak belum tersedia"}`}
+          {isLoading ? "Dashboard Anak: Menghubungkan data" : "Dashboard Anak"}
         </h2>
         <p className="mt-3 text-sm text-gray-600">
-          {errorMessage ?? "Ringkasan kehadiran, progress keilmuan, dan aktivitas anak Anda."}
+          {errorMessage ?? "Pilih anak yang terhubung. Data rinci hanya ditampilkan dari endpoint yang dibatasi backend."}
         </p>
         <div className="mt-5 flex flex-wrap gap-3 text-sm">
           <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2">
             <AppIcon name="verify" className="h-4 w-4 text-emerald-500" />
-            {user.emailConfirmed ? "Email wali terverifikasi" : "Mohon verifikasi email wali"}
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2">
-            <AppIcon name="users" className="h-4 w-4 text-emerald-500" />
-            Kode santri: <span className="font-mono text-gray-900">{child?.nis ?? "-"}</span>
+            {user.emailConfirmed ? "Email wali terverifikasi" : "Email tidak diperlukan untuk mengakses dashboard"}
           </span>
         </div>
       </div>
@@ -159,15 +216,10 @@ export function WaliOverviewView({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Kehadiran Tercatat"
-          value={String(attendance?.total ?? 0)}
-          hint={`Hadir ${attendance?.hadir ?? 0} | Izin ${attendance?.izin ?? 0} | Alpa ${attendance?.alpha ?? 0}`}
-          accent="text-emerald-700"
-        />
-        <MetricCard label="Persentase Kehadiran" value={`${attendance?.persentase ?? 0}%`} hint="Dari seluruh data presensi anak" />
-        <MetricCard label="Progress Keilmuan" value={`${progress?.average ?? 0}%`} hint={`${progress?.completed ?? 0} selesai • ${progress?.inProgress ?? 0} berjalan`} />
-        <MetricCard label="Log Keluar/Masuk" value={String(logs?.total ?? 0)} hint={`${logs?.tercatat ?? 0} data tercatat`} />
+        <MetricCard label="Kehadiran" value="—" hint="Menunggu read model anak yang dipilih." accent="text-emerald-700" />
+        <MetricCard label="Progress Keilmuan" value="—" hint="Tidak menampilkan nilai buatan." />
+        <MetricCard label="Kafarah" value="—" hint="Lihat tab Kafarah setelah kontrak read model tersedia." />
+        <MetricCard label="Log Keluar/Masuk" value="—" hint="Data tidak dibaca dari dashboard Santri." />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
@@ -177,7 +229,7 @@ export function WaliOverviewView({
           actionLabel="Lihat semua"
           actionHref="/dashboard/wali/presensi"
         >
-          <EmptyBox label={attendance?.recent[0] ? `${attendance.recent[0].nama}: ${attendance.recent[0].status}` : "Belum ada data kehadiran."} />
+          <EmptyBox label="Read model child-scoped belum tersedia di kontrak frontend." />
         </SectionCard>
 
         <SectionCard
@@ -186,7 +238,7 @@ export function WaliOverviewView({
           actionLabel="Lihat semua"
           actionHref="/dashboard/wali/progress-keilmuan"
         >
-          <EmptyBox label={progress?.recent[0] ? progress.recent[0].judul : "Belum ada data progress."} />
+          <EmptyBox label="Read model child-scoped belum tersedia di kontrak frontend." />
         </SectionCard>
 
         <SectionCard
@@ -195,7 +247,7 @@ export function WaliOverviewView({
           actionLabel="Lihat semua"
           actionHref="/dashboard/wali/log-keluar-masuk"
         >
-          <EmptyBox label={logs?.recent[0] ? `${logs.recent[0].jenis}: ${logs.recent[0].status}` : "Belum ada data log keluar/masuk."} />
+          <EmptyBox label="Read model child-scoped belum tersedia di kontrak frontend." />
         </SectionCard>
       </div>
     </div>
@@ -203,6 +255,12 @@ export function WaliOverviewView({
 }
 
 export function WaliPresensiView() {
+  const { token } = useAuth();
+  const { child, isLoading: isChildLoading, error: childError } = useWaliSelectedChild();
+  const [records, setRecords] = useState<Array<{ id: string; tanggal: string; status: string; keterangan: string | null }>>([]);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => { let active = true; if (!token || !child) return undefined; void fetchPresensiList(token, child.santriId).then((r) => { if (active) setRecords(r.items); }).catch(() => { if (active) setError("Presensi anak belum dapat dimuat."); }); return () => { active = false; }; }, [child, token]);
+  const hadir = records.filter((item) => item.status === "hadir").length;
   return (
     <div className="space-y-6">
       <WaliChildNavigation activeTab="presensi" />
@@ -211,7 +269,7 @@ export function WaliPresensiView() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500">Ringkasan Presensi</p>
-            <h2 className="text-2xl font-semibold text-gray-900">Data santri belum tersedia</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">{child?.fullName ?? "Pilih anak untuk melihat presensi"}</h2>
             <p className="text-sm text-gray-500">30 catatan kehadiran terakhir.</p>
           </div>
           <div className="flex flex-wrap gap-2 text-sm">
@@ -231,16 +289,16 @@ export function WaliPresensiView() {
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Total Pertemuan" value="0" />
-          <MetricCard label="Hadir" value="0" valueClassName="text-emerald-600" />
-          <MetricCard label="Izin/Terlambat" value="0" valueClassName="text-amber-500" />
-          <MetricCard label="Persentase Kehadiran" value="0%" />
+          <MetricCard label="Catatan" value={isChildLoading ? "…" : String(records.length)} />
+          <MetricCard label="Hadir" value={String(hadir)} valueClassName="text-emerald-600" />
+          <MetricCard label="Izin/Sakit" value={String(records.filter((item) => item.status === "izin" || item.status === "sakit").length)} valueClassName="text-amber-500" />
+          <MetricCard label="Persentase Kehadiran" value={records.length ? `${((hadir / records.length) * 100).toFixed(1)}%` : "—"} />
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <SectionCard title="Timeline Presensi" description="5 catatan terbaru">
-          <EmptyBox label="Belum ada catatan presensi." />
+          <EmptyBox label={childError ?? error ?? (child ? (records[0] ? `${records[0].tanggal}: ${records[0].status}` : "Belum ada catatan presensi.") : "Pilih anak terlebih dahulu.")} />
         </SectionCard>
 
         <SectionCard title="Catatan Perlu Tindak Lanjut" description="Konfirmasi kepada musyrif jika diperlukan.">
@@ -275,6 +333,10 @@ export function WaliPresensiView() {
 
 export function WaliProgressView() {
   const [category, setCategory] = useState<"al-quran" | "al-hadits">("al-quran");
+  const { token } = useAuth();
+  const { child } = useWaliSelectedChild();
+  const [progress, setProgress] = useState<{ total: number; completed: number; inProgress: number; average: number } | null>(null);
+  useEffect(() => { let active = true; if (!token || !child) return undefined; void fetchProgressKeilmuan(token, category, child.nis).then((r) => { if (active) setProgress(r.summary); }); return () => { active = false; }; }, [category, child, token]);
 
   return (
     <div className="space-y-6">
@@ -288,10 +350,10 @@ export function WaliProgressView() {
           </div>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Total Modul" value="0" />
-          <MetricCard label="Selesai" value="0" valueClassName="text-emerald-600" />
-          <MetricCard label="Sedang Dikerjakan" value="0" valueClassName="text-orange-500" />
-          <MetricCard label="Rata-rata Pencapaian" value="0%" />
+          <MetricCard label="Total Modul" value={progress ? String(progress.total) : "—"} />
+          <MetricCard label="Selesai" value={progress ? String(progress.completed) : "—"} valueClassName="text-emerald-600" />
+          <MetricCard label="Sedang Dikerjakan" value={progress ? String(progress.inProgress) : "—"} valueClassName="text-orange-500" />
+          <MetricCard label="Rata-rata Pencapaian" value={progress ? `${progress.average}%` : "—"} />
         </div>
       </div>
 
@@ -354,6 +416,10 @@ export function WaliProgressView() {
 }
 
 export function WaliLogView() {
+  const { token } = useAuth();
+  const { child } = useWaliSelectedChild();
+  const [records, setRecords] = useState<Array<{ id: string; tanggal: string; tujuan: string; status: string }>>([]);
+  useEffect(() => { let active = true; if (!token || !child) return undefined; void fetchLogKeluarMasuk(token, { page: 1, perPage: 100, santriId: child.santriId }).then((r) => { if (active) setRecords(r.items); }); return () => { active = false; }; }, [child, token]);
   return (
     <div className="space-y-6">
       <WaliChildNavigation activeTab="log" />
@@ -362,7 +428,7 @@ export function WaliLogView() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500">Log Keluar/Masuk</p>
-            <h2 className="text-2xl font-semibold text-gray-900">Data santri belum tersedia</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">{child?.fullName ?? "Pilih anak untuk melihat log"}</h2>
             <p className="text-sm text-gray-500">Pantau seluruh data keluar/masuk anak Anda.</p>
           </div>
           <Link to="/dashboard" className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:text-gray-800">
@@ -374,13 +440,48 @@ export function WaliLogView() {
       </div>
 
       <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-        Belum ada data log keluar/masuk.
+        {child ? (records.length ? records.slice(0, 5).map((item) => `${item.tanggal} — ${item.tujuan} (${item.status})`).join("\n") : "Belum ada data log keluar/masuk.") : "Pilih anak terlebih dahulu."}
       </div>
     </div>
   );
 }
 
+export function WaliKafarahView() {
+  const { token } = useAuth();
+  const { child } = useWaliSelectedChild();
+  const [records, setRecords] = useState<Array<{ id: string; jenisPelanggaranLabel: string; sisaTanggungan: number }>>([]);
+  useEffect(() => { let active = true; if (!token || !child) return undefined; void fetchKafarahList(token, child.santriId).then((r) => { if (active) setRecords(r.items); }); return () => { active = false; }; }, [child, token]);
+  return (
+    <div className="space-y-6">
+      <WaliChildNavigation activeTab="kafarah" />
+      <SectionCard title="Kafarah Anak" description="Pemantauan tanggungan anak yang dipilih.">
+        <EmptyBox label={child ? (records.length ? records.map((item) => `${item.jenisPelanggaranLabel}: sisa ${item.sisaTanggungan}`).join("\n") : "Belum ada data Kafarah.") : "Pilih anak terlebih dahulu."} />
+      </SectionCard>
+    </div>
+  );
+}
+
 export function StaffAttendanceView() {
+  const { token } = useAuth();
+  const [records, setRecords] = useState<Array<{ id: string; tanggal: string; status: string; keterangan: string | null }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!token) return undefined;
+    void fetchPresensiList(token).then((response) => {
+      if (active) setRecords(response.items);
+    }).catch(() => {
+      if (active) setError("Data presensi belum dapat dimuat.");
+    }).finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
+  }, [token]);
+
+  const hadir = records.filter((record) => record.status === "hadir").length;
+  const izin = records.filter((record) => record.status === "izin" || record.status === "sakit").length;
+  const percentage = records.length ? `${((hadir / records.length) * 100).toFixed(1)}%` : "—";
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
@@ -406,16 +507,16 @@ export function StaffAttendanceView() {
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Total Pertemuan" value="0" />
-          <MetricCard label="Hadir" value="0" valueClassName="text-emerald-600" />
-          <MetricCard label="Izin" value="0" valueClassName="text-amber-500" />
-          <MetricCard label="Persentase Kehadiran" value="0%" />
+          <MetricCard label="Catatan Dimuat" value={isLoading ? "…" : String(records.length)} />
+          <MetricCard label="Hadir" value={isLoading ? "…" : String(hadir)} valueClassName="text-emerald-600" />
+          <MetricCard label="Izin/Sakit" value={isLoading ? "…" : String(izin)} valueClassName="text-amber-500" />
+          <MetricCard label="Persentase Kehadiran" value={isLoading ? "…" : percentage} />
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <SectionCard title="Timeline Presensi" description="5 catatan terbaru">
-          <EmptyBox label="Belum ada catatan presensi." />
+          <EmptyBox label={error ?? (isLoading ? "Memuat catatan presensi..." : records[0] ? `${records[0].tanggal}: ${records[0].status}` : "Belum ada catatan presensi.")} />
         </SectionCard>
 
         <SectionCard title="Catatan Perlu Tindak Lanjut" description="Ambil tindakan pada izin/alpa terbaru.">
@@ -435,11 +536,9 @@ export function StaffAttendanceView() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={3} className="py-3 text-center text-gray-500">
-                  Belum ada data.
-                </td>
-              </tr>
+              {records.slice(0, 30).map((record) => <tr key={record.id}><td className="py-2">{record.tanggal}</td><td className="py-2">{record.status}</td><td className="py-2">{record.keterangan ?? "-"}</td></tr>)}
+              {!isLoading && !error && records.length === 0 ? <tr><td colSpan={3} className="py-3 text-center text-gray-500">Belum ada data.</td></tr> : null}
+              {error ? <tr><td colSpan={3} className="py-3 text-center text-rose-700">{error}</td></tr> : null}
             </tbody>
           </table>
         </div>
@@ -452,6 +551,15 @@ export function StaffProgressView() {
   const [category, setCategory] = useState<"al-quran" | "al-hadits">("al-quran");
   const [genderFilter, setGenderFilter] = useState<"all" | "putra" | "putri">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { token } = useAuth();
+  const [santriCount, setSantriCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!token) return undefined;
+    void fetchSantriList(token).then((response) => { if (active) setSantriCount(response.totalCount); });
+    return () => { active = false; };
+  }, [token]);
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-1.5 overflow-hidden">
@@ -515,10 +623,10 @@ export function StaffProgressView() {
 
       <div className="space-y-2 overflow-hidden">
         <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <CompactMetricCard label="Total Santri" value="0" />
-          <CompactMetricCard label="Santri Aktif Progres" value="0" />
-          <CompactMetricCard label="Rata-rata Kelas" value="0%" />
-          <CompactMetricCard label={`Modul Tuntas | Target ${category === "al-hadits" ? "31" : "30"}`} value="0" />
+          <CompactMetricCard label="Total Santri" value={santriCount === null ? "…" : String(santriCount)} />
+          <CompactMetricCard label="Santri Aktif Progres" value="—" />
+          <CompactMetricCard label="Rata-rata Kelas" value="—" />
+          <CompactMetricCard label={`Modul Tuntas | Target ${category === "al-hadits" ? "31" : "30"}`} value="—" />
         </div>
 
         <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -555,6 +663,20 @@ export function StaffProgressView() {
 export function StaffLogView() {
   const [genderFilter, setGenderFilter] = useState<"all" | "putra" | "putri">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { token } = useAuth();
+  const [records, setRecords] = useState<Array<{ id: string; tanggal: string; santriNama: string; tujuan: string; status: string }>>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!token) return undefined;
+    void fetchLogKeluarMasuk(token, { page: 1, perPage: 100, scope: "team" }).then((response) => {
+      if (active) setRecords(response.items);
+    }).catch(() => { if (active) setLoadError("Data log belum dapat dimuat."); });
+    return () => { active = false; };
+  }, [token]);
+
+  const matchingRecords = records.filter((record) => `${record.santriNama} ${record.tujuan}`.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="space-y-6">
@@ -600,7 +722,7 @@ export function StaffLogView() {
 
       <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-          {searchQuery.trim() ? "Belum ada data log keluar/masuk yang cocok." : "Belum ada data log keluar/masuk."}
+          {loadError ?? (matchingRecords.length ? matchingRecords.slice(0, 5).map((record) => `${record.tanggal} — ${record.santriNama}: ${record.tujuan} (${record.status})`).join("\n") : searchQuery.trim() ? "Belum ada data log keluar/masuk yang cocok." : "Belum ada data log keluar/masuk.")}
         </div>
       </div>
     </div>

@@ -25,6 +25,7 @@ const StaffProgressPage = lazyPage(() => import("@/pages/staff-progress/StaffPro
 const WaliLogPage = lazyPage(() => import("@/pages/wali-log/WaliLogPage"), "WaliLogPage");
 const WaliPresensiPage = lazyPage(() => import("@/pages/wali-presensi/WaliPresensiPage"), "WaliPresensiPage");
 const WaliProgressPage = lazyPage(() => import("@/pages/wali-progress/WaliProgressPage"), "WaliProgressPage");
+const WaliKafarahPage = lazyPage(() => import("@/pages/wali-kafarah/WaliKafarahPage"), "WaliKafarahPage");
 
 function lazyPage<T extends Record<string, ComponentType>>(loader: () => Promise<T>, exportName: string) {
   return lazy(async () => {
@@ -168,6 +169,15 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <WaliProgressPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/wali/kafarah"
+        element={
+          <ProtectedRoute>
+            <WaliKafarahPage />
           </ProtectedRoute>
         }
       />
