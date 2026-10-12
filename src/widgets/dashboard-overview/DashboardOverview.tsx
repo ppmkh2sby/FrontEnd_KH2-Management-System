@@ -50,7 +50,7 @@ type StaffDashboardViewModel = {
   attendanceSummary: DashboardSummaryBlock[];
   attendanceProgressWidth: string;
   progressLeaders: Array<{ name: string; team: string; completed: string; average: string; updatedAt: string }>;
-  recentLogs: Array<{ name: string; type: string; dateLabel: string; note: string; status: string }>;
+  recentLogs: Array<{ id: string; name: string; type: string; dateLabel: string; note: string; status: string }>;
 };
 
 type StaffDashboardData = {
@@ -455,7 +455,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
             <div className="mt-4 space-y-2">
               {view.recentLogs.length > 0 ? (
                 view.recentLogs.map((item) => (
-                  <div key={`${item.name}-${item.dateLabel}`} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2">
+                  <div key={item.id} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-gray-900">{item.name} | {item.type}</p>
                       <p className="text-xs text-gray-500">{item.dateLabel}</p>
@@ -766,7 +766,7 @@ function buildStaffDashboard(role: string, data: StaffDashboardData): StaffDashb
     ],
     attendanceProgressWidth: sample.length ? attendancePercent : "0%",
     progressLeaders: data.quran.rows.map((row) => ({ name: row.nama, team: row.tim, completed: String(row.completed), average: `${row.average}%`, updatedAt: row.updatedAtUtc ? formatDateTime(row.updatedAtUtc) : "Belum diperbarui" })),
-    recentLogs: data.logs.items.map((item) => ({ name: item.santriNama, type: item.tujuan, dateLabel: item.tanggal, note: item.catatan ?? "Tanpa catatan", status: item.status })),
+    recentLogs: data.logs.items.map((item) => ({ id: item.id, name: item.santriNama, type: item.tujuan, dateLabel: item.tanggal, note: item.catatan ?? "Tanpa catatan", status: item.status })),
   };
 }
 

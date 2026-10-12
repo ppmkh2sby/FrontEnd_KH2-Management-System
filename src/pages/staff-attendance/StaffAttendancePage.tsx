@@ -3,7 +3,7 @@ import { StaffAttendanceView } from "@/widgets/role-pages/RoleViews";
 
 export function StaffAttendancePage() {
   return (
-    <RolePageShell allowedRoles={["DewanGuru", "Pengurus"]} contentPanelClassName="h-[calc(100vh-40px)] overflow-y-auto">
+    <RolePageShell allowedRoles={["Admin", "DewanGuru", "Pengurus"]} contentPanelClassName="h-[calc(100vh-40px)] overflow-y-auto">
       <StaffAttendanceView />
     </RolePageShell>
   );

@@ -4,7 +4,7 @@ Updated: 2026-10-12. Branch: `agent/face-attendance-deployment`.
 
 ## Implemented and audited
 
-- Successful login already routes to `/dashboard`, except when `mustChangePassword` is true. No email-completion gate was reintroduced.
+- Successful login routes to `/dashboard`, except when `mustChangePassword` is true. A real `/api/v1/auth/change-password` form now enforces that requirement and requires fresh login after success. No email-completion gate was reintroduced.
 - Wali child selection is scoped per authenticated Wali and validated against `GET /api/v1/wali/me/children`. Dashboard, Presensi, Kafarah, Progress Keilmuan, and Log render API records for the selected authorized child with loading, empty, and error states. Progress uses the actual Wali detail DTO.
 - Pengurus, Dewan Guru, and Admin dashboards use staff API responses for Santri total, Presensi, Quran/Hadits progress, and team Log. Staff progress and Log pages use backend search/filter/pagination. No staff dashboard metric uses the old role preset. Attendance rate is labeled as a sample of the latest 100 records.
 - Sidebar saves expansion and scroll by user/role, restores scroll on route changes, and mobile drawer supports Escape. Desktop sidebar remains fixed.
@@ -16,12 +16,12 @@ Updated: 2026-10-12. Branch: `agent/face-attendance-deployment`.
 
 - `npm run typecheck`: passed.
 - `npm run build`: passed; Vite production output generated.
-- `npm test`: source-contract tests passed.
+- `npm test`: source-contract tests passed. Gate 2 adds separate Playwright browser E2E with mocked backend responses; see `docs/agent-handoff/FE_GATE2_HANDOFF.md` for executed results.
 - `git diff --check`: passed.
-- No Playwright/Cypress or other browser E2E suite is present. No authenticated staging backend, database, real webcam, or mobile device was available. Desktop/mobile navigation, back/forward, refresh, permission handling, and biometric similarity remain **not verified end-to-end**.
+- No authenticated disposable backend/PostgreSQL, real webcam, or physical mobile device was available. Browser mock results are not live BE–FE integration evidence.
 
 ## Open backend and release blockers
 
-- BE `GET /api/v1/face-profiles/me/enrollment` currently sets `isEnrolled` true for an Active profile/enrollment without checking five embeddings. FE defensively checks `sampleCount === 5`; BE should align the field with the shared contract.
-- Expected `../Backend_KH2-Management-System/docs/agent-handoff/BE_CONTRACT_HANDOFF.md` was not present. Contracts were checked against `docs/BE_API_MATRIX.md` and controller/DTO source instead.
+- BE `GET /api/v1/face-profiles/me/enrollment` now checks the required embedding count in controller source; the earlier discrepancy is resolved at source level, but not runtime-verified.
+- BE `docs/agent-handoff/BE_CONTRACT_HANDOFF.md` was available for the Gate 2 re-audit, alongside `docs/BE_API_MATRIX.md` and controller/DTO source.
 - No live FE↔BE/staging validation or biometric production approval was performed. This is not deploy sign-off. No deploy, commit, push, or edits outside Frontend were performed.

@@ -8,6 +8,7 @@ const AttendanceCreatePage = lazyPage(() => import("@/pages/attendance-create/At
 const AttendanceRecapPage = lazyPage(() => import("@/pages/attendance-recap/AttendanceRecapPage"), "AttendanceRecapPage");
 const AttendanceTeamPage = lazyPage(() => import("@/pages/attendance-team/AttendanceTeamPage"), "AttendanceTeamPage");
 const AttendanceSimulationPage = lazyPage(() => import("@/pages/attendance-simulation/AttendanceSimulationPage"), "AttendanceSimulationPage");
+const ChangePasswordPage = lazyPage(() => import("@/pages/change-password/ChangePasswordPage"), "ChangePasswordPage");
 const FaceEnrollmentPage = lazyPage(() => import("@/pages/face-enrollment/FaceEnrollmentPage"), "FaceEnrollmentPage");
 const FaceRecognitionTestPage = lazyPage(() => import("@/pages/face-recognition-test/FaceRecognitionTestPage"), "FaceRecognitionTestPage");
 const HomePage = lazyPage(() => import("@/pages/home/HomePage"), "HomePage");
@@ -34,8 +35,8 @@ function lazyPage<T extends Record<string, ComponentType>>(loader: () => Promise
   });
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isBootstrapping } = useAuth();
+function ProtectedRoute({ children, allowPasswordChange = false }: { children: React.ReactNode; allowPasswordChange?: boolean }) {
+  const { isAuthenticated, isBootstrapping, user } = useAuth();
 
   if (isBootstrapping) {
     return (
@@ -47,6 +48,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.mustChangePassword && !allowPasswordChange) {
+    return <Navigate to="/change-password" replace />;
   }
 
   return <>{children}</>;
@@ -86,11 +91,8 @@ export function AppRouter() {
       <Route
         path="/change-password"
         element={
-          <ProtectedRoute>
-            <PlaceholderPage
-              title="Ganti Password"
-              description="Halaman ini disiapkan sebagai tujuan setelah login pertama jika backend mengembalikan mustChangePassword = true."
-            />
+          <ProtectedRoute allowPasswordChange>
+            <ChangePasswordPage />
           </ProtectedRoute>
         }
       />

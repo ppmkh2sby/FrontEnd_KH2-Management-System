@@ -16,4 +16,6 @@ Status is based on the Phase 1 frozen paths; it is not evidence of a live stagin
 
 No `VITE_*` Face Service secret, embedding, or device credential is used by the client.
 
-Known BE discrepancy: enrollment `isEnrolled` may be true before five embeddings exist. FE requires `status === "Active" && sampleCount === 5` before showing a completed enrollment. This has not been validated against a running BE.
+Gate 2 source re-audit (2026-10-12): BE `SantriFaceProfileController.GetEnrollment` now computes `isEnrolled` from `sampleCount == RequiredEnrollmentSamples`; the prior source-level discrepancy is resolved. FE still defensively requires `status === "Active" && sampleCount === 5`. This has not been validated against a running BE/PostgreSQL instance.
+
+`POST /api/v1/auth/change-password` accepts JSON `{ currentPassword, newPassword }` and returns `204`; FE now uses this route for mandatory password changes and requires a fresh login afterward because the existing JWT retains the old claim. `GET /api/v1/dashboard/santri/me` remains Santri-only; Wali no longer requests it.

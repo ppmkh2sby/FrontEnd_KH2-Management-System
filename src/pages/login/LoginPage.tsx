@@ -3,6 +3,7 @@ import { useNavigate, Navigate, Link } from "react-router-dom";
 import { LoginForm } from "@/widgets/auth/login-form/LoginForm";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ApiError } from "@/shared/lib/http";
+import { getPostLoginRoute } from "@/shared/lib/auth";
 
 const loginHighlights = [
   {
@@ -54,12 +55,12 @@ const loginKeywords = [
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isBootstrapping } = useAuth();
+  const { login, user, isAuthenticated, isBootstrapping } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isBootstrapping && isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={user ? getPostLoginRoute(user) : "/dashboard"} replace />;
   }
 
   async function handleLogin(values: { identity: string; password: string }) {
