@@ -1,7 +1,10 @@
-import { useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { getGenericRoleDashboard, getRoleDisplayName } from "@/shared/config/dashboard";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { fetchLogKeluarMasuk, fetchPresensiList, fetchSantriList, fetchStaffProgress } from "@/shared/lib/santri-data";
+import type { LogKeluarMasukListResponse, PresensiListResponse, ProgressKeilmuanStaffPageResponse, SantriListResponse } from "@/shared/types/santri-data";
 import { formatNumber } from "@/shared/lib/formatNumber";
 import type { AuthUser } from "@/shared/types/auth";
 import type {
@@ -50,6 +53,14 @@ type StaffDashboardViewModel = {
   recentLogs: Array<{ name: string; type: string; dateLabel: string; note: string; status: string }>;
 };
 
+type StaffDashboardData = {
+  santri: SantriListResponse;
+  presensi: PresensiListResponse;
+  quran: ProgressKeilmuanStaffPageResponse;
+  hadits: ProgressKeilmuanStaffPageResponse;
+  logs: LogKeluarMasukListResponse;
+};
+
 const metricToneClass: Record<DashboardMetric["tone"], string> = {
   emerald: "text-emerald-700",
   rose: "text-rose-700",
@@ -75,7 +86,7 @@ export function DashboardOverview({
         isLoading={Boolean(isSantriDashboardLoading)}
       />
     );
-  } else if (user.role === "DewanGuru" || user.role === "Pengurus") {
+  } else if (user.role === "DewanGuru" || user.role === "Pengurus" || user.role === "Admin") {
     content = <StaffDashboard user={user} />;
   } else if (user.role === "WaliSantri") {
     content = (
@@ -317,8 +328,30 @@ function SantriDashboard({
 }
 
 function StaffDashboard({ user }: { user: AuthUser }) {
-  const view = buildStaffDashboard(user.role);
+  const { token } = useAuth();
+  const [data, setData] = useState<StaffDashboardData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    setData(null); setError(null); setIsLoading(true);
+    if (!token) { setError("Sesi login tidak tersedia."); setIsLoading(false); return; }
+    void Promise.all([
+      fetchSantriList(token),
+      fetchPresensiList(token, undefined, 1, 100),
+      fetchStaffProgress(token, "al-quran"),
+      fetchStaffProgress(token, "al-hadits"),
+      fetchLogKeluarMasuk(token, { page: 1, perPage: 5, scope: "team" }),
+    ]).then(([santri, presensi, quran, hadits, logs]) => {
+      if (active) setData({ santri, presensi, quran, hadits, logs });
+    }).catch(() => { if (active) setError("Ringkasan staf belum dapat dimuat dari backend. Periksa akses atau koneksi."); })
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
+  }, [token]);
+  const view = data ? buildStaffDashboard(user.role, data) : null;
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  if (!view) return <div role={error ? "alert" : "status"} className="rounded-2xl border border-gray-200 bg-white p-8 text-sm text-gray-700">{error ?? (isLoading ? "Memuat ringkasan staf dari backend..." : "Ringkasan belum tersedia.")}</div>;
 
   return (
     <div className="relative h-full min-h-0">
@@ -383,7 +416,7 @@ function StaffDashboard({ user }: { user: AuthUser }) {
             >
               <SummaryGrid items={view.attendanceSummary} accentIndex={4} accentTone="emerald" />
               <ProgressBar width={view.attendanceProgressWidth} tone="emerald" />
-              <p className="mt-2 text-xs text-gray-500">Presensi hari ini: 0 catatan.</p>
+              <p className="mt-2 text-xs text-gray-500">Ringkasan status dari {data!.presensi.items.length} catatan terbaru; total {data!.presensi.totalCount} catatan.</p>
             </PanelCard>
 
             <PanelCard
@@ -698,38 +731,42 @@ function EmptyDataState({ label }: { label: string }) {
   );
 }
 
-function buildStaffDashboard(role: string): StaffDashboardViewModel {
-  const roleLabel = role === "Pengurus" ? "Pengurus" : "Dewan Guru";
+function buildStaffDashboard(role: string, data: StaffDashboardData): StaffDashboardViewModel {
+  const roleLabel = role === "Admin" ? "Admin" : role === "Pengurus" ? "Pengurus" : "Dewan Guru";
+  const sample = data.presensi.items;
+  const count = (status: string) => sample.filter((item) => item.status === status).length;
+  const hadir = count("hadir");
+  const attendancePercent = sample.length ? `${((hadir / sample.length) * 100).toFixed(1)}%` : "—";
 
   return {
     roleLabel,
     tags: [
       { icon: "calendar", label: formatLongDate(new Date().toISOString()) },
       { icon: "verify", label: roleLabel },
-      { icon: "mail", label: "Monitoring siap dihubungkan" },
+      { icon: "mail", label: "Data dari API backend" },
     ],
     highlights: [
-      { label: "Kehadiran", value: "0%" },
-      { label: "Avg Progress", value: "0%" },
-      { label: "Log Hari Ini", value: "0" },
-      { label: "Total Santri", value: "0" },
+      { label: "Kehadiran (sampel terbaru)", value: attendancePercent },
+      { label: "Avg Progress Quran", value: `${data.quran.summary.average}%` },
+      { label: "Total Log", value: String(data.logs.totalCount) },
+      { label: "Total Santri", value: String(data.santri.totalCount) },
     ],
     metrics: [
-      { label: "Total Presensi", value: "0", hint: "Hadir 0 kali", tone: "emerald" },
-      { label: "Santri Aktif Progres", value: "0", hint: "0 modul tuntas", tone: "blue" },
-      { label: "Data Progress", value: "0", hint: "Quran 0 | Hadits 0", tone: "amber" },
-      { label: "Total Log Keluar/Masuk", value: "0", hint: "Putra 0 | Putri 0", tone: "blue" },
+      { label: "Total Presensi", value: String(data.presensi.totalCount), hint: `${sample.length} catatan terbaru dimuat`, tone: "emerald" },
+      { label: "Santri Aktif Progres Quran", value: String(data.quran.summary.activeSantri), hint: `${data.quran.summary.completedModules} modul tuntas`, tone: "blue" },
+      { label: "Modul Tuntas", value: String(data.quran.summary.completedModules + data.hadits.summary.completedModules), hint: `Quran ${data.quran.summary.completedModules} | Hadits ${data.hadits.summary.completedModules}`, tone: "amber" },
+      { label: "Total Log Keluar/Masuk", value: String(data.logs.totalCount), hint: `${data.logs.items.length} log terbaru dimuat`, tone: "blue" },
     ],
     attendanceSummary: [
-      { label: "Hadir", value: "0" },
-      { label: "Izin", value: "0" },
-      { label: "Sakit", value: "0" },
-      { label: "Alpa", value: "0" },
-      { label: "Persen", value: "0%" },
+      { label: "Hadir", value: String(hadir) },
+      { label: "Izin", value: String(count("izin")) },
+      { label: "Sakit", value: String(count("sakit")) },
+      { label: "Alpa", value: String(count("alpa")) },
+      { label: "Persen Sampel", value: attendancePercent },
     ],
-    attendanceProgressWidth: "0%",
-    progressLeaders: [],
-    recentLogs: [],
+    attendanceProgressWidth: sample.length ? attendancePercent : "0%",
+    progressLeaders: data.quran.rows.map((row) => ({ name: row.nama, team: row.tim, completed: String(row.completed), average: `${row.average}%`, updatedAt: row.updatedAtUtc ? formatDateTime(row.updatedAtUtc) : "Belum diperbarui" })),
+    recentLogs: data.logs.items.map((item) => ({ name: item.santriNama, type: item.tujuan, dateLabel: item.tanggal, note: item.catatan ?? "Tanpa catatan", status: item.status })),
   };
 }
 

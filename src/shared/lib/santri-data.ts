@@ -13,6 +13,8 @@ import type {
   PresensiRecapResponse,
   ProgressCategoryCode,
   ProgressKeilmuanPageResponse,
+  ProgressKeilmuanDetailResponse,
+  ProgressKeilmuanStaffPageResponse,
   SantriListResponse,
   SantriItem,
   WaliChildrenResponse,
@@ -93,8 +95,8 @@ export async function fetchPublicSantriTotal(signal?: AbortSignal) {
   return response.totalCount;
 }
 
-export async function fetchPresensiList(accessToken: string, santriId?: string) {
-  const params = new URLSearchParams({ page: "1", perPage: "500" });
+export async function fetchPresensiList(accessToken: string, santriId?: string, page = 1, perPage = 100) {
+  const params = new URLSearchParams({ page: String(page), perPage: String(perPage) });
   if (santriId) params.set("santriId", santriId);
   return http<PresensiListResponse>(`/api/v1/presensi?${params.toString()}`, { accessToken });
 }
@@ -172,8 +174,8 @@ export async function fetchPresensiRecap(
   });
 }
 
-export async function fetchKafarahList(accessToken: string, santriId?: string) {
-  const params = new URLSearchParams({ page: "1", perPage: "200" });
+export async function fetchKafarahList(accessToken: string, santriId?: string, page = 1, perPage = 100) {
+  const params = new URLSearchParams({ page: String(page), perPage: String(perPage) });
   if (santriId) params.set("santriId", santriId);
   return http<KafarahListResponse>(`/api/v1/kafarah?${params.toString()}`, { accessToken });
 }
@@ -184,6 +186,18 @@ export async function fetchProgressKeilmuan(accessToken: string, category: Progr
   return http<ProgressKeilmuanPageResponse>(`/api/v1/progress-keilmuan?${params.toString()}`, {
     accessToken,
   });
+}
+
+export async function fetchWaliProgressDetail(accessToken: string, santriCode: string) {
+  const params = new URLSearchParams({ santriCode });
+  return http<ProgressKeilmuanDetailResponse>(`/api/v1/progress-keilmuan?${params.toString()}`, { accessToken });
+}
+
+export async function fetchStaffProgress(accessToken: string, category: ProgressCategoryCode, filters: { gender?: string; q?: string; page?: number; perPage?: number } = {}) {
+  const params = new URLSearchParams({ category, page: String(filters.page ?? 1), perPage: String(filters.perPage ?? 5) });
+  if (filters.gender && filters.gender !== "all") params.set("gender", filters.gender);
+  if (filters.q?.trim()) params.set("q", filters.q.trim());
+  return http<ProgressKeilmuanStaffPageResponse>(`/api/v1/progress-keilmuan/staff?${params.toString()}`, { accessToken });
 }
 
 export async function syncProgressKeilmuan(

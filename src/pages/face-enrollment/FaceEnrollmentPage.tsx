@@ -52,7 +52,12 @@ function FaceEnrollmentContent() {
       return;
     }
     void fetchMyFaceEnrollment(token).then((status) => {
-      if (active) setIsEnrolled(status.isEnrolled);
+      if (!active) return;
+      if (status.isEnrolled && (status.status !== "Active" || status.sampleCount !== 5)) {
+        setStatusError("Data wajah akun ini belum lengkap. Hubungi pengelola sebelum mendaftarkan ulang.");
+        return;
+      }
+      setIsEnrolled(status.isEnrolled);
     }).catch(() => {
       if (active) setStatusError("Status pendaftaran wajah belum dapat dimuat. Coba buka kembali halaman ini.");
     }).finally(() => {

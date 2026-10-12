@@ -1,25 +1,27 @@
 # Frontend Remediation Completion Report
 
-## Implemented
+Updated: 2026-10-12. Branch: `agent/face-attendance-deployment`.
 
-- Login now routes directly to `/dashboard` unless `mustChangePassword` is true; email state remains truthful but is no longer an access gate.
-- Added `GET /api/v1/wali/me/children` client DTO and per-authenticated-Wali session selection.
-- Added Wali Kafarah navigation and route. Presensi, Kafarah, and Log use the selected authorized `santriId`; Progress uses the selected child's authorized `santriCode` (`nis`).
-- Replaced staff attendance static values with the authorized Presensi list, staff log empty placeholder with the authorized log read, and staff total Santri zero with the authorized Santri list count.
-- Sidebar expanded state and scroll position are namespaced by authenticated user and role in session storage.
-- Removed viewport-driven 90-degree camera rotation and switched enrollment preview to `object-contain`; transmitted captures remain unmirrored.
-- Added source-contract tests and the contract, role UX, camera, and asset audit documents.
+## Implemented and audited
 
-## Verification
+- Successful login already routes to `/dashboard`, except when `mustChangePassword` is true. No email-completion gate was reintroduced.
+- Wali child selection is scoped per authenticated Wali and validated against `GET /api/v1/wali/me/children`. Dashboard, Presensi, Kafarah, Progress Keilmuan, and Log render API records for the selected authorized child with loading, empty, and error states. Progress uses the actual Wali detail DTO.
+- Pengurus, Dewan Guru, and Admin dashboards use staff API responses for Santri total, Presensi, Quran/Hadits progress, and team Log. Staff progress and Log pages use backend search/filter/pagination. No staff dashboard metric uses the old role preset. Attendance rate is labeled as a sample of the latest 100 records.
+- Sidebar saves expansion and scroll by user/role, restores scroll on route changes, and mobile drawer supports Escape. Desktop sidebar remains fixed.
+- Enrollment reads backend state after POST/refresh; UI claims completion only for Active status and exactly five samples. Self-verification POSTs a new `photo` to BE, displays similarity, and does not create Presensi.
+- Camera uses portrait-friendly mobile and landscape desktop constraints, `object-contain` preview, natural unmirrored capture, and full-frame submission without a forced portrait crop. Existing permission/retry/fallback handling remains.
+- Existing brand assets were preserved; KH2 logo was not changed.
+
+## Verification performed
 
 - `npm run typecheck`: passed.
-- `npm test`: passed, 3 source-contract tests.
-- `npm run build`: passed (Vite production build).
+- `npm run build`: passed; Vite production output generated.
+- `npm test`: source-contract tests passed.
 - `git diff --check`: passed.
+- No Playwright/Cypress or other browser E2E suite is present. No authenticated staging backend, database, real webcam, or mobile device was available. Desktop/mobile navigation, back/forward, refresh, permission handling, and biometric similarity remain **not verified end-to-end**.
 
-## Known limits / release status
+## Open backend and release blockers
 
-- No real browser, mobile device, backend runtime, database, or biometric staging test was available. Those scenarios are **not verified**.
-- Wali detailed reads depend on backend authorization at every guarded endpoint; no client-side filtering of broad child data is implemented.
-- Biometric production remains blocked pending the separate model/license/calibration/security approval gate.
-- Deployment and rollback require the approved immutable frontend artifact workflow; no deployment, DNS, database, or biometric activation was performed.
+- BE `GET /api/v1/face-profiles/me/enrollment` currently sets `isEnrolled` true for an Active profile/enrollment without checking five embeddings. FE defensively checks `sampleCount === 5`; BE should align the field with the shared contract.
+- Expected `../Backend_KH2-Management-System/docs/agent-handoff/BE_CONTRACT_HANDOFF.md` was not present. Contracts were checked against `docs/BE_API_MATRIX.md` and controller/DTO source instead.
+- No live FE↔BE/staging validation or biometric production approval was performed. This is not deploy sign-off. No deploy, commit, push, or edits outside Frontend were performed.

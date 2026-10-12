@@ -61,6 +61,15 @@ export function AppShell({
     setExpandedItems((current) => new Set([...current, ...parentKeys]));
   }, [location.pathname, matchedRouteKey, navigation]);
 
+  useEffect(() => {
+    if (!isSidebarOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsSidebarOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isSidebarOpen]);
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
       <div className="min-h-screen p-3 lg:p-5">
@@ -105,6 +114,7 @@ export function AppShell({
               sidebarCaption={sidebarCaption}
               onLogout={onLogout}
               sidebarStateKey={sidebarStateKey}
+              routePath={location.pathname}
               onNavigate={() => setIsSidebarOpen(false)}
               expandedItems={expandedItems}
               activeItemKey={activeItemKey}
@@ -133,6 +143,7 @@ type SidebarContentProps = {
   sidebarCaption?: string;
   onLogout: () => Promise<void>;
   sidebarStateKey: string;
+  routePath: string;
   onNavigate: () => void;
   expandedItems: Set<string>;
   activeItemKey: string;
@@ -147,6 +158,7 @@ function SidebarContent({
   sidebarCaption,
   onLogout,
   sidebarStateKey,
+  routePath,
   onNavigate,
   expandedItems,
   activeItemKey,
@@ -176,11 +188,11 @@ function SidebarContent({
   // position so selecting an item near the bottom does not jump it to the top.
   useLayoutEffect(() => {
     const savedScrollTop = window.sessionStorage.getItem(`${sidebarStateKey}:scroll-top`);
-
-    if (savedScrollTop && navigationRef.current) {
-      navigationRef.current.scrollTop = Number(savedScrollTop);
+    const position = Number(savedScrollTop);
+    if (savedScrollTop !== null && Number.isFinite(position) && position >= 0 && navigationRef.current) {
+      navigationRef.current.scrollTop = position;
     }
-  }, [sidebarStateKey]);
+  }, [sidebarStateKey, routePath]);
 
   const saveNavigationScroll = () => {
     if (navigationRef.current) {

@@ -13,6 +13,8 @@ Thumbs.db
 AGENTS.md
 **/AGENTS.md
 .codex/
+**/*_AGENT_PROMPT.md
+**/agent-handoff/
 
 # Generated Graphify knowledge graph artifacts
 graphify-out/

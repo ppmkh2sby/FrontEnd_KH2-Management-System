@@ -111,17 +111,15 @@ export async function startUserCamera(video: HTMLVideoElement): Promise<MediaStr
   return stream;
 }
 
-export function captureCameraFrame(video: HTMLVideoElement, preserveFullFrame = false): string {
+export function captureCameraFrame(video: HTMLVideoElement): string {
   if (!video.videoWidth || !video.videoHeight) {
     throw new Error("Kamera belum siap. Tunggu sebentar lalu ambil foto kembali.");
   }
 
-  return renderCameraImage(
-    video,
-    video.videoWidth,
-    video.videoHeight,
-    !preserveFullFrame && isMobilePortraitViewport() ? 9 / 16 : undefined,
-  );
+  // The preview uses object-contain. Send that same full sensor frame to the
+  // backend; a forced 9:16 crop can cut off the face on mobile devices whose
+  // camera track still exposes landscape dimensions.
+  return renderCameraImage(video, video.videoWidth, video.videoHeight);
 }
 
 export async function captureCameraFile(file: File): Promise<string> {

@@ -37,3 +37,24 @@ test("Wali detail reads include the backend-authorized selected-child parameters
   assert.match(source, /params\.set\("santriCode", santriCode\)/);
   assert.match(source, /params\.set\("santriId", query\.santriId\)/);
 });
+
+test("Wali progress uses the detail DTO and staff uses the scoped list DTO", () => {
+  const client = read("src/shared/lib/santri-data.ts");
+  const views = read("src/widgets/role-pages/RoleViews.tsx");
+  assert.match(client, /fetchWaliProgressDetail[\s\S]*?ProgressKeilmuanDetailResponse/);
+  assert.match(client, /fetchStaffProgress[\s\S]*?ProgressKeilmuanStaffPageResponse/);
+  assert.match(views, /fetchStaffProgress\(token, category/);
+  assert.match(views, /scope: "team"/);
+});
+
+test("face enrollment only reports an active five-sample enrollment", () => {
+  const enrollment = read("src/pages/face-enrollment/FaceEnrollmentPage.tsx");
+  assert.match(enrollment, /sampleCount !== 5/);
+  assert.match(enrollment, /status !== "Active"/);
+});
+
+test("camera submits the full video frame without a viewport-derived crop", () => {
+  const camera = read("src/shared/lib/camera.ts");
+  assert.match(camera, /renderCameraImage\(video, video\.videoWidth, video\.videoHeight\)/);
+  assert.doesNotMatch(camera, /isMobilePortraitViewport\(\) \? 9 \/ 16/);
+});

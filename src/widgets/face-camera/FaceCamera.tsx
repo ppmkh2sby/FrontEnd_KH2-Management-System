@@ -49,7 +49,7 @@ export function FaceCamera({ onCapture, isBusy = false, captureLabel = "Ambil fo
     if (!videoRef.current) return;
     try {
       setError(null);
-      await onCapture(captureCameraFrame(videoRef.current, wideFraming));
+      await onCapture(captureCameraFrame(videoRef.current));
     } catch (captureError) {
       setError(captureError instanceof Error ? captureError.message : "Foto belum dapat diambil. Coba kembali.");
     }

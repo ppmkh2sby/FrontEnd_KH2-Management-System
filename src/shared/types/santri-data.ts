@@ -158,6 +158,21 @@ export type ProgressKeilmuanPageResponse = {
   recentUpdates: ProgressKeilmuanRecentItem[];
 };
 
+export type ProgressKeilmuanDetailResponse = {
+  santri: { id: string; nama: string; nis: string; gender: string; tim: string; kelas: string };
+  quran: ProgressKeilmuanPageResponse;
+  hadits: ProgressKeilmuanPageResponse;
+};
+
+export type ProgressKeilmuanStaffPageResponse = {
+  category: ProgressCategoryCode;
+  summary: { totalSantri: number; activeSantri: number; average: number; completedModules: number; moduleCount: number };
+  rows: Array<{ santriId: string; code: string; nama: string; gender: string; kelas: string; tim: string; completed: number; inProgress: number; average: number; updatedAtUtc: string | null }>;
+  page: number;
+  perPage: number;
+  totalCount: number;
+};
+
 export type LogKeluarMasukItem = {
   id: string;
   santriId: string;
