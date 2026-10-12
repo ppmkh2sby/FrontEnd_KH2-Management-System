@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PropsWithChildren, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PropsWithChildren, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import type { AuthUser } from "@/shared/types/auth";
@@ -25,7 +25,8 @@ export function AppShell({
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [manualActiveItemKey, setManualActiveItemKey] = useState(() => getInitialActiveKey(navigation));
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["data-santri"]));
+  const sidebarStateKey = `kh2-sidebar-expanded:${user.userId}:${user.role}`;
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => readExpandedItems(sidebarStateKey));
   const matchedRouteKey = findNavigationKeyByPath(navigation, location.pathname);
   const activeItemKey = matchedRouteKey ?? manualActiveItemKey;
 
@@ -44,6 +45,10 @@ export function AppShell({
   };
 
   useEffect(() => {
+    window.sessionStorage.setItem(sidebarStateKey, JSON.stringify([...expandedItems]));
+  }, [expandedItems, sidebarStateKey]);
+
+  useEffect(() => {
     if (!matchedRouteKey) {
       return;
     }
@@ -55,6 +60,15 @@ export function AppShell({
 
     setExpandedItems((current) => new Set([...current, ...parentKeys]));
   }, [location.pathname, matchedRouteKey, navigation]);
+
+  useEffect(() => {
+    if (!isSidebarOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsSidebarOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isSidebarOpen]);
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
@@ -82,7 +96,7 @@ export function AppShell({
         {isSidebarOpen ? (
           <button
             type="button"
-            className="fixed inset-0 z-[60] bg-slate-900/40 lg:hidden"
+            className="fixed inset-0 z-60 bg-slate-900/40 lg:hidden"
             onClick={() => setIsSidebarOpen(false)}
             aria-label="Tutup menu"
           />
@@ -90,7 +104,7 @@ export function AppShell({
 
         <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside
-            className={`fixed bottom-2 left-2 top-2 z-[70] flex w-[min(88vw,320px)] flex-col overflow-hidden rounded-[1.25rem] border border-gray-100 bg-white shadow-lg transition-transform duration-300 lg:sticky lg:top-5 lg:z-auto lg:h-[calc(100vh-40px)] lg:w-[280px] lg:min-w-[280px] lg:translate-x-0 lg:rounded-[1.5rem] ${
+            className={`fixed bottom-2 left-2 top-2 z-70 flex w-[min(88vw,320px)] flex-col overflow-hidden rounded-[1.25rem] border border-gray-100 bg-white shadow-lg transition-transform duration-300 lg:fixed lg:bottom-5 lg:left-5 lg:top-5 lg:z-auto lg:h-[calc(100vh-40px)] lg:w-70 lg:min-w-70 lg:translate-x-0 lg:rounded-3xl ${
               isSidebarOpen ? "translate-x-0" : "-translate-x-[120%] lg:translate-x-0"
             }`}
           >
@@ -99,6 +113,8 @@ export function AppShell({
               navigation={navigation}
               sidebarCaption={sidebarCaption}
               onLogout={onLogout}
+              sidebarStateKey={sidebarStateKey}
+              routePath={location.pathname}
               onNavigate={() => setIsSidebarOpen(false)}
               expandedItems={expandedItems}
               activeItemKey={activeItemKey}
@@ -108,9 +124,9 @@ export function AppShell({
             />
           </aside>
 
-          <section className="min-w-0">
+          <section className="min-w-0 lg:col-start-2">
             <div
-              className={`rounded-[1.5rem] border border-gray-100 bg-white p-4 shadow-lg lg:rounded-[1.5rem] lg:p-5 ${contentPanelClassName ?? ""}`}
+              className={`rounded-3xl border border-gray-100 bg-white p-4 shadow-lg lg:rounded-3xl lg:p-5 ${contentPanelClassName ?? ""}`}
             >
               {children}
             </div>
@@ -126,6 +142,8 @@ type SidebarContentProps = {
   navigation: DashboardNavItem[];
   sidebarCaption?: string;
   onLogout: () => Promise<void>;
+  sidebarStateKey: string;
+  routePath: string;
   onNavigate: () => void;
   expandedItems: Set<string>;
   activeItemKey: string;
@@ -139,6 +157,8 @@ function SidebarContent({
   navigation,
   sidebarCaption,
   onLogout,
+  sidebarStateKey,
+  routePath,
   onNavigate,
   expandedItems,
   activeItemKey,
@@ -148,6 +168,7 @@ function SidebarContent({
 }: SidebarContentProps) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const navigationRef = useRef<HTMLElement | null>(null);
   const notificationItem = navigation.find((item) => item.key === "notifikasi");
   const primaryNavigation = navigation.filter((item) => item.key !== "notifikasi");
 
@@ -162,6 +183,22 @@ function SidebarContent({
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // AppShell is recreated after a route change. Keep the menu at the same
+  // position so selecting an item near the bottom does not jump it to the top.
+  useLayoutEffect(() => {
+    const savedScrollTop = window.sessionStorage.getItem(`${sidebarStateKey}:scroll-top`);
+    const position = Number(savedScrollTop);
+    if (savedScrollTop !== null && Number.isFinite(position) && position >= 0 && navigationRef.current) {
+      navigationRef.current.scrollTop = position;
+    }
+  }, [sidebarStateKey, routePath]);
+
+  const saveNavigationScroll = () => {
+    if (navigationRef.current) {
+      window.sessionStorage.setItem(`${sidebarStateKey}:scroll-top`, String(navigationRef.current.scrollTop));
+    }
+  };
 
   const renderNavItem = (item: DashboardNavItem, depth: number = 0): ReactNode => {
     const hasChildren = Boolean(item.children?.length);
@@ -182,6 +219,7 @@ function SidebarContent({
 
             onActivate(item.key);
             setIsProfileMenuOpen(false);
+            saveNavigationScroll();
             if (item.href) {
               onRouteNavigate(item.href);
             }
@@ -236,12 +274,16 @@ function SidebarContent({
     <>
       <div className="border-b border-gray-100 px-6 py-5">
         <div className="flex items-center gap-2.5">
-          <img className="h-8 w-8 object-contain" src="/assets/images/logo_ppm.png" alt="PPM KH2" />
+          <img className="h-8 w-8 object-contain" src="/assets/images/logo_ppm.webp" alt="PPM KH2" />
           <span className="whitespace-nowrap text-sm font-semibold text-gray-900">KH2 - Management System</span>
         </div>
       </div>
 
-      <nav className="sidebar-scroll flex-1 overflow-y-auto px-5 py-5 text-sm">
+      <nav
+        ref={navigationRef}
+        onScroll={saveNavigationScroll}
+        className="sidebar-scroll flex-1 overflow-y-auto px-5 py-5 text-sm"
+      >
         <div className="mb-4">
           <label className="relative block">
             <AppIcon name="search" className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -337,6 +379,18 @@ function SidebarContent({
       </div>
     </>
   );
+}
+
+function readExpandedItems(storageKey: string): Set<string> {
+  try {
+    const parsed: unknown = JSON.parse(window.sessionStorage.getItem(storageKey) ?? "[]");
+    if (Array.isArray(parsed) && parsed.every((value) => typeof value === "string")) {
+      return new Set(parsed);
+    }
+  } catch {
+    // fall through to the default menu state
+  }
+  return new Set(["data-santri"]);
 }
 
 function getInitialActiveKey(navigation: DashboardNavItem[]) {

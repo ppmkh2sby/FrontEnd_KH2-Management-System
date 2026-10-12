@@ -23,6 +23,17 @@ export type SantriListResponse = {
   totalCount: number;
 };
 
+export type WaliChild = {
+  santriId: string;
+  nis: string;
+  fullName: string;
+  tim: string;
+};
+
+export type WaliChildrenResponse = {
+  items: WaliChild[];
+};
+
 export type PresensiItem = {
   id: string;
   santriId: string;
@@ -145,6 +156,21 @@ export type ProgressKeilmuanPageResponse = {
   summary: ProgressKeilmuanSummary;
   modules: ProgressKeilmuanModuleItem[];
   recentUpdates: ProgressKeilmuanRecentItem[];
+};
+
+export type ProgressKeilmuanDetailResponse = {
+  santri: { id: string; nama: string; nis: string; gender: string; tim: string; kelas: string };
+  quran: ProgressKeilmuanPageResponse;
+  hadits: ProgressKeilmuanPageResponse;
+};
+
+export type ProgressKeilmuanStaffPageResponse = {
+  category: ProgressCategoryCode;
+  summary: { totalSantri: number; activeSantri: number; average: number; completedModules: number; moduleCount: number };
+  rows: Array<{ santriId: string; code: string; nama: string; gender: string; kelas: string; tim: string; completed: number; inProgress: number; average: number; updatedAtUtc: string | null }>;
+  page: number;
+  perPage: number;
+  totalCount: number;
 };
 
 export type LogKeluarMasukItem = {

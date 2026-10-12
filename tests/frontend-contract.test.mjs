@@ -1,0 +1,60 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import test from "node:test";
+
+const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("login only blocks forced password changes", () => {
+  const source = read("src/shared/lib/auth.ts");
+  assert.match(source, /mustChangePassword/);
+  assert.match(source, /return "\/dashboard"/);
+  assert.doesNotMatch(source, /return "\/set-email"/);
+  assert.doesNotMatch(source, /return "\/verify-email"/);
+});
+
+test("canonical face client uses only backend enrollment and self-verify routes", () => {
+  const source = read("src/shared/lib/face-attendance.ts");
+  assert.match(source, /\/api\/v1\/face-profiles\/me\/enrollment/);
+  assert.match(source, /\/api\/v1\/face-profiles\/me\/verify/);
+  assert.match(source, /body\.append\("photos", photo\)/);
+  assert.match(source, /body\.append\("photo", photo\)/);
+  assert.doesNotMatch(source, /FACE_SERVICE_API_KEY|trusted-device/i);
+});
+
+test("critical public brand and landing assets exist", () => {
+  for (const asset of [
+    "public/assets/images/logo_ppm.webp",
+    "public/assets/images/landing/hero.webp",
+    "public/assets/images/landing/gallery-belajar.webp",
+  ]) {
+    assert.equal(existsSync(new URL(`../${asset}`, import.meta.url)), true, `${asset} is missing`);
+  }
+});
+
+test("Wali detail reads include the backend-authorized selected-child parameters", () => {
+  const source = read("src/shared/lib/santri-data.ts");
+  assert.match(source, /params\.set\("santriId", santriId\)/);
+  assert.match(source, /params\.set\("santriCode", santriCode\)/);
+  assert.match(source, /params\.set\("santriId", query\.santriId\)/);
+});
+
+test("Wali progress uses the detail DTO and staff uses the scoped list DTO", () => {
+  const client = read("src/shared/lib/santri-data.ts");
+  const views = read("src/widgets/role-pages/RoleViews.tsx");
+  assert.match(client, /fetchWaliProgressDetail[\s\S]*?ProgressKeilmuanDetailResponse/);
+  assert.match(client, /fetchStaffProgress[\s\S]*?ProgressKeilmuanStaffPageResponse/);
+  assert.match(views, /fetchStaffProgress\(token, category/);
+  assert.match(views, /scope: "team"/);
+});
+
+test("face enrollment only reports an active five-sample enrollment", () => {
+  const enrollment = read("src/pages/face-enrollment/FaceEnrollmentPage.tsx");
+  assert.match(enrollment, /sampleCount !== 5/);
+  assert.match(enrollment, /status !== "Active"/);
+});
+
+test("camera submits the full video frame without a viewport-derived crop", () => {
+  const camera = read("src/shared/lib/camera.ts");
+  assert.match(camera, /renderCameraImage\(video, video\.videoWidth, video\.videoHeight\)/);
+  assert.doesNotMatch(camera, /isMobilePortraitViewport\(\) \? 9 \/ 16/);
+});

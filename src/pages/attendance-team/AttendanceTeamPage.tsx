@@ -13,7 +13,6 @@ import {
   fetchSantriList,
   formatShortDate,
   getAttendanceStatusClass,
-  getAttendanceStatusDotClass,
   mapAttendanceStatus,
   updatePresensi,
 } from "@/shared/lib/santri-data";
@@ -50,7 +49,7 @@ const pageSize = 8;
 
 export function AttendanceTeamPage() {
   return (
-    <SantriPageShell>
+    <SantriPageShell allowedTeams={["KTB"]}>
       {() => <AttendanceTeamContent />}
     </SantriPageShell>
   );
@@ -273,7 +272,7 @@ function AttendanceTeamContent() {
                       setFilters((current) => ({ ...current, gender: option.key as TeamAttendanceFilters["gender"] }));
                       setCurrentPage(1);
                     }}
-                    className={`inline-flex min-w-[66px] items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex min-w-16.5 items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold transition ${
                       filters.gender === option.key
                         ? "bg-emerald-600 text-white shadow-sm"
                         : "text-gray-700 hover:bg-white"
@@ -332,14 +331,14 @@ function AttendanceTeamContent() {
           <div className="overflow-x-auto">
             <table className="w-full table-fixed text-sm">
               <colgroup>
-                <col className="w-[220px]" />
-                <col className="w-[90px]" />
-                <col className="w-[140px]" />
-                <col className="w-[120px]" />
-                <col className="w-[110px]" />
-                <col className="w-[120px]" />
-                <col className="w-[140px]" />
-                <col className="w-[92px]" />
+                <col className="w-55" />
+                <col className="w-22.5" />
+                <col className="w-35" />
+                <col className="w-30" />
+                <col className="w-27.5" />
+                <col className="w-30" />
+                <col className="w-35" />
+                <col className="w-23" />
               </colgroup>
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
@@ -372,8 +371,7 @@ function AttendanceTeamContent() {
                       <td className="truncate px-4 py-3 text-[11px] leading-5 text-gray-600">{capitalize(row.kategori)}</td>
                       <td className="px-4 py-3 text-[11px] leading-5 text-gray-600">{capitalize(row.waktu)}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-medium ${getAttendanceStatusClass(row.status)}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${getAttendanceStatusDotClass(row.status)}`} />
+                        <span className={`text-[10px] font-semibold ${getAttendanceStatusClass(row.status)}`}>
                           {mapAttendanceStatus(row.status)}
                         </span>
                       </td>
@@ -469,8 +467,7 @@ function AttendanceTeamContent() {
                 selected={filters.status}
                 onToggle={(value) => setFilters((current) => ({ ...current, status: toggleValue(current.status, value) }))}
                 renderLabel={(value) => (
-                  <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium ${getAttendanceStatusClass(value)}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${getAttendanceStatusDotClass(value)}`} />
+                  <span className={`text-xs font-medium ${getAttendanceStatusClass(value)}`}>
                     {mapAttendanceStatus(value)}
                   </span>
                 )}

@@ -1,5 +1,7 @@
 node_modules
 dist
+playwright-report/
+test-results/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
@@ -8,3 +10,13 @@ Thumbs.db
 .env.azure
 .env.local
 .env.*.local
+
+# Local AI agent instructions and workspace metadata
+AGENTS.md
+**/AGENTS.md
+.codex/
+**/*_AGENT_PROMPT.md
+**/agent-handoff/
+
+# Generated Graphify knowledge graph artifacts
+graphify-out/

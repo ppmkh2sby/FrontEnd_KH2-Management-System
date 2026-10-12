@@ -1,27 +1,42 @@
+import { lazy, Suspense, type ComponentType } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { AttendancePage } from "@/pages/attendance/AttendancePage";
-import { AttendanceCreatePage } from "@/pages/attendance-create/AttendanceCreatePage";
-import { AttendanceRecapPage } from "@/pages/attendance-recap/AttendanceRecapPage";
-import { AttendanceTeamPage } from "@/pages/attendance-team/AttendanceTeamPage";
-import { HomePage } from "@/pages/home/HomePage";
-import { KafarahCreatePage } from "@/pages/kafarah-create/KafarahCreatePage";
-import { KafarahMinePage } from "@/pages/kafarah-mine/KafarahMinePage";
-import { KafarahTeamPage } from "@/pages/kafarah-team/KafarahTeamPage";
-import { LogInputPage } from "@/pages/log-input/LogInputPage";
-import { LogMinePage } from "@/pages/log-mine/LogMinePage";
-import { LoginPage } from "@/pages/login/LoginPage";
 import { LandingPage } from "@/pages/landing/LandingPage";
-import { ProgressPage } from "@/pages/progress/ProgressPage";
-import { StaffAttendancePage } from "@/pages/staff-attendance/StaffAttendancePage";
-import { StaffLogPage } from "@/pages/staff-log/StaffLogPage";
-import { StaffProgressPage } from "@/pages/staff-progress/StaffProgressPage";
-import { WaliLogPage } from "@/pages/wali-log/WaliLogPage";
-import { WaliPresensiPage } from "@/pages/wali-presensi/WaliPresensiPage";
-import { WaliProgressPage } from "@/pages/wali-progress/WaliProgressPage";
 import { useAuth } from "@/app/providers/AuthProvider";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isBootstrapping } = useAuth();
+const AttendancePage = lazyPage(() => import("@/pages/attendance/AttendancePage"), "AttendancePage");
+const AttendanceCreatePage = lazyPage(() => import("@/pages/attendance-create/AttendanceCreatePage"), "AttendanceCreatePage");
+const AttendanceRecapPage = lazyPage(() => import("@/pages/attendance-recap/AttendanceRecapPage"), "AttendanceRecapPage");
+const AttendanceTeamPage = lazyPage(() => import("@/pages/attendance-team/AttendanceTeamPage"), "AttendanceTeamPage");
+const AttendanceSimulationPage = lazyPage(() => import("@/pages/attendance-simulation/AttendanceSimulationPage"), "AttendanceSimulationPage");
+const ChangePasswordPage = lazyPage(() => import("@/pages/change-password/ChangePasswordPage"), "ChangePasswordPage");
+const FaceEnrollmentPage = lazyPage(() => import("@/pages/face-enrollment/FaceEnrollmentPage"), "FaceEnrollmentPage");
+const FaceRecognitionTestPage = lazyPage(() => import("@/pages/face-recognition-test/FaceRecognitionTestPage"), "FaceRecognitionTestPage");
+const HomePage = lazyPage(() => import("@/pages/home/HomePage"), "HomePage");
+const KafarahCreatePage = lazyPage(() => import("@/pages/kafarah-create/KafarahCreatePage"), "KafarahCreatePage");
+const KafarahMinePage = lazyPage(() => import("@/pages/kafarah-mine/KafarahMinePage"), "KafarahMinePage");
+const KafarahTeamPage = lazyPage(() => import("@/pages/kafarah-team/KafarahTeamPage"), "KafarahTeamPage");
+const JurnalKeilmuanPage = lazyPage(() => import("@/pages/jurnal-keilmuan/JurnalKeilmuanPage"), "JurnalKeilmuanPage");
+const LogInputPage = lazyPage(() => import("@/pages/log-input/LogInputPage"), "LogInputPage");
+const LogMinePage = lazyPage(() => import("@/pages/log-mine/LogMinePage"), "LogMinePage");
+const LoginPage = lazyPage(() => import("@/pages/login/LoginPage"), "LoginPage");
+const ProgressPage = lazyPage(() => import("@/pages/progress/ProgressPage"), "ProgressPage");
+const StaffAttendancePage = lazyPage(() => import("@/pages/staff-attendance/StaffAttendancePage"), "StaffAttendancePage");
+const StaffLogPage = lazyPage(() => import("@/pages/staff-log/StaffLogPage"), "StaffLogPage");
+const StaffProgressPage = lazyPage(() => import("@/pages/staff-progress/StaffProgressPage"), "StaffProgressPage");
+const WaliLogPage = lazyPage(() => import("@/pages/wali-log/WaliLogPage"), "WaliLogPage");
+const WaliPresensiPage = lazyPage(() => import("@/pages/wali-presensi/WaliPresensiPage"), "WaliPresensiPage");
+const WaliProgressPage = lazyPage(() => import("@/pages/wali-progress/WaliProgressPage"), "WaliProgressPage");
+const WaliKafarahPage = lazyPage(() => import("@/pages/wali-kafarah/WaliKafarahPage"), "WaliKafarahPage");
+
+function lazyPage<T extends Record<string, ComponentType>>(loader: () => Promise<T>, exportName: string) {
+  return lazy(async () => {
+    const module = await loader();
+    return { default: module[exportName] as ComponentType };
+  });
+}
+
+function ProtectedRoute({ children, allowPasswordChange = false }: { children: React.ReactNode; allowPasswordChange?: boolean }) {
+  const { isAuthenticated, isBootstrapping, user } = useAuth();
 
   if (isBootstrapping) {
     return (
@@ -33,6 +48,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.mustChangePassword && !allowPasswordChange) {
+    return <Navigate to="/change-password" replace />;
   }
 
   return <>{children}</>;
@@ -62,7 +81,8 @@ function PlaceholderPage({
 
 export function AppRouter() {
   return (
-    <Routes>
+    <Suspense fallback={<RouteLoader />}>
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/frontend-static-demo" element={<LandingPage />} />
@@ -71,11 +91,8 @@ export function AppRouter() {
       <Route
         path="/change-password"
         element={
-          <ProtectedRoute>
-            <PlaceholderPage
-              title="Ganti Password"
-              description="Halaman ini disiapkan sebagai tujuan setelah login pertama jika backend mengembalikan mustChangePassword = true."
-            />
+          <ProtectedRoute allowPasswordChange>
+            <ChangePasswordPage />
           </ProtectedRoute>
         }
       />
@@ -159,6 +176,15 @@ export function AppRouter() {
       />
 
       <Route
+        path="/dashboard/wali/kafarah"
+        element={
+          <ProtectedRoute>
+            <WaliKafarahPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/dashboard/wali/log-keluar-masuk"
         element={
           <ProtectedRoute>
@@ -172,6 +198,53 @@ export function AppRouter() {
         element={
           <ProtectedRoute>
             <AttendancePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/daftarkan-wajah"
+        element={
+          <ProtectedRoute>
+            <FaceEnrollmentPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/uji-wajah-saya"
+        element={
+          <ProtectedRoute>
+            <AttendanceSimulationPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/dashboard/simulasi-presensi" element={<Navigate to="/dashboard/uji-wajah-saya" replace />} />
+
+      <Route
+        path="/dashboard/uji-deteksi-wajah"
+        element={
+          <ProtectedRoute>
+            <FaceRecognitionTestPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/presensi-wajah"
+        element={
+          <ProtectedRoute>
+            <Navigate to="/dashboard" replace />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/presensi-wajah/saya"
+        element={
+          <ProtectedRoute>
+            <Navigate to="/dashboard" replace />
           </ProtectedRoute>
         }
       />
@@ -239,6 +312,15 @@ export function AppRouter() {
         }
       />
 
+      <Route
+        path="/dashboard/jurnal-keilmuan"
+        element={
+          <ProtectedRoute>
+            <JurnalKeilmuanPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/dashboard/log-keluar-masuk" element={<Navigate to="/dashboard/log-keluar-masuk/input" replace />} />
 
       <Route
@@ -259,7 +341,12 @@ export function AppRouter() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
+}
+
+function RouteLoader() {
+  return <div className="grid min-h-screen place-items-center bg-[#fbfcfa] text-sm font-medium text-forest-900/60">Memuat halaman...</div>;
 }

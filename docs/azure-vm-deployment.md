@@ -62,6 +62,15 @@ hostname atau public IP tanpa `http://`/`https://`. Untuk uji awal menggunakan
 HTTP, gunakan `HTTPS_ENABLED=false`. Setelah HTTPS tersedia, ubah `APP_ORIGIN`
 menjadi `https://...` dan set `HTTPS_ENABLED=true`.
 
+`FACE_SERVICE_API_KEY` wajib memakai secret berbeda dari `JWT_SECRET_KEY`.
+Karena source Face Recognition belum memiliki remote Git, salin folder
+`Face_Recognition_KH2` ke home directory VM sehingga posisinya menjadi sibling
+repository frontend dan backend. Dari PowerShell komputer development:
+
+```powershell
+scp -r "D:\project\KH2-System-Monitoring\Face_Recognition_KH2" maestroadmin@PUBLIC_IP_VM:~/
+```
+
 ## 3. Jalankan stack
 
 ```bash
@@ -70,7 +79,7 @@ sudo docker compose --env-file .env.azure ps
 curl -I http://127.0.0.1/
 ```
 
-Build pertama membutuhkan waktu karena image .NET, Node, dan PostgreSQL perlu
+Build pertama membutuhkan waktu karena image Python, .NET, Node, dan PostgreSQL perlu
 diunduh. Backend otomatis menjalankan migration pada database baru. Database
 mulai kosong dan seeding account/sample data sengaja tidak diaktifkan; impor
 data produksi atau buat akun administrator melalui prosedur administrasi yang
@@ -104,8 +113,28 @@ sudo docker compose --env-file .env.azure up --build -d
   tetap hanya berada di VM.
 - Database disimpan dalam Docker volume `postgres_data`. Jangan menjalankan
   `docker compose down -v` di production karena flag `-v` menghapus database.
-- Port backend dan PostgreSQL sengaja tidak dipublikasikan. Akses hanya melalui
-  frontend pada port 80/443.
-- Fitur face recognition membutuhkan service Face Recognition terpisah pada
-  network internal. API dan login dasar tetap dapat dijalankan tanpa membuka
-  service tersebut ke publik.
+- Port Face Recognition, backend, dan PostgreSQL sengaja tidak dipublikasikan.
+  Akses aplikasi hanya melalui frontend pada port 80/443.
+
+## HTTPS
+
+Caddy pada Compose menangani sertifikat TLS dan redirect HTTP ke HTTPS secara
+otomatis. Setelah A record domain telah mengarah ke public IP VM, buat inbound
+NSG rule TCP `443`, lalu ubah `.env.azure`:
+
+```dotenv
+APP_DOMAIN=app.example.com
+APP_ORIGIN=https://app.example.com
+APP_HOST=app.example.com;www.app.example.com;127.0.0.1;localhost
+HTTPS_ENABLED=true
+```
+
+Jalankan ulang stack dan periksa provisioning sertifikat:
+
+```bash
+sudo docker compose --env-file .env.azure up --build -d
+sudo docker compose --env-file .env.azure logs --tail=100 caddy
+```
+
+Caddy harus dapat dijangkau publik pada port 80 dan 443 agar dapat menerbitkan
+dan memperbarui sertifikat.

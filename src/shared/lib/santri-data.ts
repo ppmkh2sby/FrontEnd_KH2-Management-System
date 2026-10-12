@@ -13,7 +13,11 @@ import type {
   PresensiRecapResponse,
   ProgressCategoryCode,
   ProgressKeilmuanPageResponse,
+  ProgressKeilmuanDetailResponse,
+  ProgressKeilmuanStaffPageResponse,
   SantriListResponse,
+  SantriItem,
+  WaliChildrenResponse,
 } from "@/shared/types/santri-data";
 
 export const attendanceCategoryOptions: AttendanceCategoryCode[] = ["sambung", "asrama", "keakraban"];
@@ -78,8 +82,23 @@ export async function fetchSantriList(accessToken: string) {
   return http<SantriListResponse>("/api/v1/santri?page=1&perPage=200", { accessToken });
 }
 
-export async function fetchPresensiList(accessToken: string) {
-  return http<PresensiListResponse>("/api/v1/presensi?page=1&perPage=500", { accessToken });
+export async function fetchSantriById(accessToken: string, id: string) {
+  return http<SantriItem>(`/api/v1/santri/${encodeURIComponent(id)}`, { accessToken });
+}
+
+export async function fetchMyWaliChildren(accessToken: string) {
+  return http<WaliChildrenResponse>("/api/v1/wali/me/children", { accessToken });
+}
+
+export async function fetchPublicSantriTotal(signal?: AbortSignal) {
+  const response = await http<{ totalCount: number }>("/api/v1/public/santri-total", { signal });
+  return response.totalCount;
+}
+
+export async function fetchPresensiList(accessToken: string, santriId?: string, page = 1, perPage = 100) {
+  const params = new URLSearchParams({ page: String(page), perPage: String(perPage) });
+  if (santriId) params.set("santriId", santriId);
+  return http<PresensiListResponse>(`/api/v1/presensi?${params.toString()}`, { accessToken });
 }
 
 export async function storeBulkPresensi(
@@ -155,14 +174,30 @@ export async function fetchPresensiRecap(
   });
 }
 
-export async function fetchKafarahList(accessToken: string) {
-  return http<KafarahListResponse>("/api/v1/kafarah?page=1&perPage=200", { accessToken });
+export async function fetchKafarahList(accessToken: string, santriId?: string, page = 1, perPage = 100) {
+  const params = new URLSearchParams({ page: String(page), perPage: String(perPage) });
+  if (santriId) params.set("santriId", santriId);
+  return http<KafarahListResponse>(`/api/v1/kafarah?${params.toString()}`, { accessToken });
 }
 
-export async function fetchProgressKeilmuan(accessToken: string, category: ProgressCategoryCode) {
-  return http<ProgressKeilmuanPageResponse>(`/api/v1/progress-keilmuan?category=${encodeURIComponent(category)}`, {
+export async function fetchProgressKeilmuan(accessToken: string, category: ProgressCategoryCode, santriCode?: string) {
+  const params = new URLSearchParams({ category });
+  if (santriCode) params.set("santriCode", santriCode);
+  return http<ProgressKeilmuanPageResponse>(`/api/v1/progress-keilmuan?${params.toString()}`, {
     accessToken,
   });
+}
+
+export async function fetchWaliProgressDetail(accessToken: string, santriCode: string) {
+  const params = new URLSearchParams({ santriCode });
+  return http<ProgressKeilmuanDetailResponse>(`/api/v1/progress-keilmuan?${params.toString()}`, { accessToken });
+}
+
+export async function fetchStaffProgress(accessToken: string, category: ProgressCategoryCode, filters: { gender?: string; q?: string; page?: number; perPage?: number } = {}) {
+  const params = new URLSearchParams({ category, page: String(filters.page ?? 1), perPage: String(filters.perPage ?? 5) });
+  if (filters.gender && filters.gender !== "all") params.set("gender", filters.gender);
+  if (filters.q?.trim()) params.set("q", filters.q.trim());
+  return http<ProgressKeilmuanStaffPageResponse>(`/api/v1/progress-keilmuan/staff?${params.toString()}`, { accessToken });
 }
 
 export async function syncProgressKeilmuan(
@@ -187,6 +222,7 @@ export async function fetchLogKeluarMasuk(
     scope?: "mine" | "team";
     search?: string;
     gender?: string;
+    santriId?: string;
   }
 ) {
   const params = new URLSearchParams({
@@ -204,6 +240,9 @@ export async function fetchLogKeluarMasuk(
 
   if (query.gender?.trim()) {
     params.set("gender", query.gender.trim());
+  }
+  if (query.santriId?.trim()) {
+    params.set("santriId", query.santriId);
   }
 
   return http<LogKeluarMasukListResponse>(`/api/v1/log-keluar-masuk?${params.toString()}`, {
@@ -334,30 +373,15 @@ export function mapAttendanceStatus(status: AttendanceStatusCode | string) {
 export function getAttendanceStatusClass(status: AttendanceStatusCode | string) {
   switch (status) {
     case "hadir":
-      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      return "text-emerald-700";
     case "izin":
-      return "border-orange-200 bg-orange-50 text-orange-700";
+      return "text-orange-700";
     case "sakit":
-      return "border-gray-200 bg-gray-50 text-gray-700";
+      return "text-slate-600";
     case "alpa":
-      return "border-red-200 bg-red-50 text-red-700";
+      return "text-red-700";
     default:
-      return "border-gray-200 bg-gray-50 text-gray-700";
-  }
-}
-
-export function getAttendanceStatusDotClass(status: AttendanceStatusCode | string) {
-  switch (status) {
-    case "hadir":
-      return "bg-emerald-600";
-    case "izin":
-      return "bg-orange-600";
-    case "sakit":
-      return "bg-gray-600";
-    case "alpa":
-      return "bg-red-600";
-    default:
-      return "bg-gray-600";
+      return "text-gray-600";
   }
 }
 

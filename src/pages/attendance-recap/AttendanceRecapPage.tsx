@@ -16,7 +16,7 @@ const pageSize = 100;
 
 export function AttendanceRecapPage() {
   return (
-    <SantriPageShell contentPanelClassName="h-[calc(100vh-40px)] overflow-y-auto md:overflow-hidden">
+    <SantriPageShell allowedTeams={["KTB"]} contentPanelClassName="h-[calc(100vh-40px)] overflow-y-auto md:overflow-hidden">
       {() => <AttendanceRecapContent />}
     </SantriPageShell>
   );
@@ -124,7 +124,7 @@ function AttendanceRecapContent() {
                       setActiveTab(option.key as "putra" | "putri");
                       setPage(1);
                     }}
-                    className={`inline-flex min-w-[58px] items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
+                    className={`inline-flex min-w-14.5 items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
                       activeTab === option.key ? "bg-emerald-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"
                     }`}
                   >
@@ -151,10 +151,10 @@ function AttendanceRecapContent() {
                   ))}
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
-                  <SummaryChip className="border-emerald-200 bg-emerald-50 text-emerald-700">Hadir: {summary.hadir}</SummaryChip>
-                  <SummaryChip className="border-blue-200 bg-blue-50 text-blue-700">Izin: {summary.izin}</SummaryChip>
-                  <SummaryChip className="border-amber-200 bg-amber-50 text-amber-700">Sakit: {summary.sakit}</SummaryChip>
-                  <SummaryChip className="border-rose-200 bg-rose-50 text-rose-700">Alpa: {summary.alpa}</SummaryChip>
+                  <SummaryChip className="text-emerald-700">Hadir: {summary.hadir}</SummaryChip>
+                  <SummaryChip className="text-orange-700">Izin: {summary.izin}</SummaryChip>
+                  <SummaryChip className="text-slate-600">Sakit: {summary.sakit}</SummaryChip>
+                  <SummaryChip className="text-red-700">Alpa: {summary.alpa}</SummaryChip>
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@ function AttendanceRecapContent() {
           </div>
         </aside>
 
-        <section className="min-h-[420px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:flex md:h-full md:min-h-0 md:flex-col">
+        <section className="min-h-105 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm md:flex md:h-full md:min-h-0 md:flex-col">
           <div className="border-b border-gray-200 px-4 py-2.5">
             <h3 className="text-sm font-semibold text-gray-900">Detail Data Rekap {activeTab === "putri" ? "Putri" : "Putra"}</h3>
           </div>
@@ -309,7 +309,7 @@ function FilterField({
 }
 
 function SummaryChip({ className, children }: { className: string; children: ReactNode }) {
-  return <span className={`rounded-full border px-[0.45rem] py-[0.12rem] text-[0.68rem] font-medium leading-[0.95rem] ${className}`}>{children}</span>;
+  return <span className={`text-[0.68rem] font-semibold leading-[0.95rem] ${className}`}>{children}</span>;
 }
 
 function capitalize(value: string) {

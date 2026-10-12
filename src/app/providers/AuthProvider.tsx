@@ -57,20 +57,31 @@ export function AuthProvider({ children }: PropsWithChildren) {
     void bootstrap();
   }, [bootstrap]);
 
+  useEffect(() => {
+    const handleExpired = (event: Event) => {
+      const rejectedToken = (event as CustomEvent<string>).detail;
+      if (rejectedToken !== getStoredAccessToken()) return;
+      clearStoredAccessToken();
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener("kh2-session-expired", handleExpired);
+    return () => window.removeEventListener("kh2-session-expired", handleExpired);
+  }, []);
+
   const login = useCallback(async (payload: LoginRequest) => {
     const response = await http<LoginResponse>("/api/v1/auth/login", {
       method: "POST",
       body: JSON.stringify(payload),
     });
 
-    setStoredAccessToken(response.accessToken);
-    setToken(response.accessToken);
-
     const me = await http<AuthMeResponse>("/api/v1/auth/me", {
       method: "GET",
       accessToken: response.accessToken,
     });
 
+    setStoredAccessToken(response.accessToken);
+    setToken(response.accessToken);
     setUser(me);
 
     return getPostLoginRoute(response);

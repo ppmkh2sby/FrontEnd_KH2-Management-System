@@ -111,7 +111,7 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
     headers.set("Authorization", `Bearer ${options.accessToken}`);
   }
 
-  if (options.body && !headers.has("Content-Type")) {
+  if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -139,6 +139,9 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
   const payload = await parseResponseBody(response);
 
   if (!response.ok) {
+    if (response.status === 401 && options.accessToken) {
+      window.dispatchEvent(new CustomEvent("kh2-session-expired", { detail: options.accessToken }));
+    }
     const details = payload && typeof payload === "object"
       ? (payload as ApiProblemDetails)
       : null;
